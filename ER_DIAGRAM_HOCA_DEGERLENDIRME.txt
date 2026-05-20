@@ -1,0 +1,12 @@
+Günaydın arkadaşlar. Projenizle ilgili değerlendirmem şöyle:
+
+Asker varlığında il, ilçe, mahalle, cadde/sokak, rütbe bilgileri özellik değil ilişki olmalıdır
+Birçok varlık dikdörtgen şekil ile çizilmemiş. İlişki simgelerinizde bir çoğu için yanlış. Onların düzeltmeniz lazım
+Cardinality hiç bir yerde yazılmamış. Bu çok büyük bir eksiklik
+Madde 3'ü sağlayan bir tasarım mevcut değil
+Birim varlığındaki il ve ilçe de aynı askerdeki gibi ilişkidir
+Birim sınıfı normalizasyondan dolayı özellik olamaz
+Benzer şekilde teçhizat türü de öyle
+Madde 6 ve 7'deki tarih bilgileri diyagramda mevcut değil
+Varlıklar arası ilişki olur. Özelliklerle varlıklar ilişki kurmaz. Dolayısıyla nöbet tutar ilişkisi tamamen yanlış
+Disiplin ceza sebebi, atış lokasyonu, atış türü, vb. bir çok alan ilişkidir.

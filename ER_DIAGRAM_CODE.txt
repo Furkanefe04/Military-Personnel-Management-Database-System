@@ -1,0 +1,60 @@
+flowchart TB
+    IL["İL"] -- 1 --- R_IL_ILCE{"İçerir"}
+    R_IL_ILCE -- N --- ILCE["İLÇE"]
+    ILCE -- 1 --- R_ILCE_MAH{"İçerir"} & R_ILCE_BIRIM{"Barındırır"}
+    R_ILCE_MAH -- N --- MAH["MAHALLE"]
+    MAH -- 1 --- R_MAH_CS{"İçerir"}
+    R_MAH_CS -- N --- CS["CADDE / SOKAK"]
+    CS -- 1 --- R_CS_ASKER{"İkamet Eder"}
+    R_CS_ASKER -- N --- A["ASKER"]
+    R_ILCE_BIRIM -- N --- B["BİRİM"]
+    A -- N --- R_ASKER_RUT{"Sahiptir"} & R_GOREV{"Görev Yapar"} & R_NOBET{"Nöbet Tutar"}
+    R_ASKER_RUT -- 1 --- RUT["RÜTBE"]
+    T["TEÇHİZAT"] -- N --- R_T_TT{"Aittir"} & R_ZIMMET{"Zimmetlenir"} & R_TRANS{"Transfer Olur"}
+    R_T_TT -- 1 --- TT["TEÇHİZAT TÜRÜ"]
+    B -- N --- R_B_BS{"Sınıfındadır"}
+    R_B_BS -- 1 --- BS["BİRİM SINIFI"]
+    E[["EĞİTİM"]] -- N --- R_E_ET{"Türüdür"}
+    R_E_ET -- 1 --- E_TUR["EĞİTİM TÜRÜ"]
+    R_GOREV -- M --- B
+    R_GOREV --- G_Bas(["Başlama Tarihi"]) & G_Ayr(["Ayrılma Tarihi"])
+    R_ZIMMET -- M --- A
+    R_ZIMMET --- Z_Bas(["Zimmet Başlangıç"]) & Z_Bit(["Zimmet Bitiş"])
+    R_TRANS -- M --- B
+    R_TRANS --- TR_Bas(["Transfer Başlangıç"]) & TR_Bit(["Transfer Bitiş"])
+    B -- 1 --- R_B_NY{"Sahiptir"} & R_BIRIM_B_HIY{"Alt Birimidir"}
+    R_B_NY -- N --- NY["NÖBET YERİ"]
+    R_NOBET -- M --- NY
+    R_NOBET --- N_Bas(["Nöbet Başlangıcı"]) & N_Bit(["Nöbet Bitiş"]) & N_VerM(["Verilen Mermi Gramajı"]) & N_GetM(["Getirilen Mermi Gramajı"])
+    O["OPERASYON"] -- 1 --- R_OP_ASKER{"Op. Katılır"} & R_OP_BIRIM{"Birim Op. Katılır"} & R_OP_TECH{"Op. Kullanılır"}
+    R_OP_ASKER -- N --- A
+    R_OP_BIRIM -- N --- B
+    R_OP_TECH -- N --- T
+    A -- 1 --- R_ASKER_IZIN{{"Kullanır"}} & R_ASKER_CEZA{{"Ceza Alır"}} & R_ASKER_ATIS{{"Atış Yapar"}} & R_ASKER_EGITIM{{"Eğitim Alır"}} & R_ASKER_IC{{"Yoklamada Bulunur"}} & R_IC_ONAY{{"Onaylar"}}
+    R_ASKER_IZIN -- N --- I[["İZİN"]]
+    R_ASKER_CEZA -- N --- DC[["DİSİPLİN CEZASI"]]
+    R_ASKER_ATIS -- N --- AT[["ATIŞ"]]
+    R_ASKER_EGITIM -- N --- E
+    R_ASKER_IC -- N --- IC[["İÇTİMA"]]
+    R_IC_ONAY -- 1 --- IC
+    R_BIRIM_B_HIY -- N --- B
+    DC -- N --- R_DC_SEBEP{"Sebebidir"}
+    R_DC_SEBEP -- 1 --- CS_EV["CEZA SEBEBİ"]
+    AT -- N --- R_AT_TUR{"Türündedir"} & R_AT_LOK{"Konumundadır"}
+    R_AT_TUR -- 1 --- AT_TUR["ATIŞ TÜRÜ"]
+    R_AT_LOK -- 1 --- AT_LOK["ATIŞ LOKASYONU"]
+    A --- A_TC(["<u>T.C. Kimlik No</u>"]) & A_Ad(["Ad"]) & A_Soyad(["Soyad"]) & A_Cin(["Cinsiyet"]) & A_Dog(["Doğum Tarihi"]) & A_Yas(["Yaş"]) & A_Tel(["Telefon"]) & A_AtStatus(["Atış Durumu"]) & A_Sure(["Askerlik Süresi"]) & A_TopIzin(["Toplam İzin"]) & A_KulIzin(["Kullanılan İzin"]) & A_KalIzin(["Kalan İzin"]) & A_CezG(["Disiplin Cezası Günü"]) & A_Teslim(["Teslim Tarihi"]) & A_Terhis(["Terhis Tarihi"]) & A_Durum(["Durum"]) & A_Dis(["Dış Kapı No"]) & A_Ic(["İç Kapı No"]) & A_Adres(["Adres Açıklaması"])
+    I --- I_Sure(["İzin Süresi"]) & I_Yol(["Yol Süresi"]) & I_Bas(["Başlangıç Tarihi"]) & I_Bit(["Bitiş Tarihi"]) & I_Ayr(["Gerçek Ayrılış"]) & I_Don(["Gerçek Dönüş"])
+    B --- B_Ad(["<u>Birim Adı</u>"]) & B_Tel(["Telefon"]) & B_Dur(["Durum"]) & B_Kur(["Kuruluş Tarihi"]) & B_Adres(["Adres Açıklaması"])
+    T --- T_Seri(["<u>Seri Numarası</u>"]) & T_Ad(["Ad"]) & T_Acik(["Açıklama"]) & T_Dur(["Durum"])
+    NY --- NY_Ad(["<u>Ad</u>"]) & NY_Silah(["Silah Durumu"])
+    O --- O_Ad(["<u>Operasyon Adı</u>"]) & O_Bas(["Başlangıç Tarihi"]) & O_Bit(["Bitiş Tarihi"]) & O_Acik(["Açıklama"])
+    IC --- IC_Zaman(["<u>Zaman</u>"]) & IC_Gereken(["Gereken Asker Sayısı"]) & IC_Olan(["Olan Asker Sayısı"])
+    DC --- DC_Bas(["Başlangıç Tarihi"]) & DC_Bit(["Bitiş Tarihi"])
+    E --- E_Zaman(["Tarih-Saat Aralığı"])
+    AT --- AT_Tarih(["Tarih"])
+
+    style A_Yas stroke-dasharray: 5 5
+    style A_KalIzin stroke-dasharray: 5 5
+    style A_Terhis stroke-dasharray: 5 5
+    style I_Bit stroke-dasharray: 5 5
