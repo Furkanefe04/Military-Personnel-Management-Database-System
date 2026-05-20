@@ -1,0 +1,76 @@
+--- Page 1 ---
+VERİTABANI SİSTEMLERİ DERSİ  
+PROJE  ADIMLARI  
+ 
+1. KONU BELİRLEME  
+i. En çok beş üyeli bir proje grubu oluşturunuz.  
+ii. Proje Excel dosyasında verilen konulardan tercih ettiğiniz üç tanesini  
+grup üyelerinizin aşağıda istenen bilgileriyle birlikte 
+mutekin16@gmail.com  adresine son tarihten önce bildiriniz.  
+✓ Ad 
+✓ Soya d 
+✓ Öğrenci numarası  
+✓ e-posta  adresi  
+iii. Tercih sıranıza ve uygunluk durumuna göre hangi proje konusunu 
+yapmanız gerektiği size e-posta  yoluyla bildirilecektir.  
+iv. Eğer sunulan konulardan farklı bir konu öneriniz varsa  bildiriniz.  
+ 
+2. VARLIK -İLİŞKİ (E -R) DİYAGRAMI OLUŞTURMA  
+i. Proje lere ait gereksinim dokümanları proje paylaşım klasöründe 
+sunulmuştur . 
+ii. Her grup kendi proje konusuna ait gereksinimleri sağlayacak bir E -R 
+diyagramı oluşturacaktır.  
+iii. Oluşturulacak bu diyagramlar en geç 9. Hafta sonuna kadar PDF 
+dosyası olara k gönderilmelidir . (Dosya  ismi => VTS_GXY_ER _v1.pdf
+       XY yerine proje grup kodu gelecektir.)  
+iv. Başka formatta gönderilen dosyalar değerlendirmeye alınmayacaktır.  
+v. E-R diyagramına ait PDF dosyasını göndermeyen  gruplar projeden not 
+alamayacaktır . 
+vi. Gönderilen d iyagramla ilgili değerlendirme e-posta  yoluyla grup 
+üyeleri ne bildirilecek tir. Eğer diyagramda düzeltme yapılması 
+gerekiyorsa hangi kısımlarda ne tür bir düzeltme gerektiği bu e-posta  
+içerisinde belirtilecektir.  
+ 
+3. VERİ TABANI OLUŞTURMA  
+i. Önceki adımda oluşturulan ve gerekliyse düzeltilen E-R diyagramı nız 
+için veri tabanı ve tablo oluşturma (CREATE) cümlelerinizi içeren bir 
+SQL script’i hazırlamanız gerekmektedir.  
+ii. Script el ile hazırlan malıdır . Management Studio ya da başka bir araç 
+altında otomatik oluşturulan  scriptler kabul edilmeyecektir . 
+iii. Script için dosya ismi create.sql şeklinde olmalıdır.  
+--- Page 2 ---
+ 
+ 
+ 
+4. SORGULAMA  
+i. Proje gereksinim dokümanında belirtilen  iki SELECT sorgulamasını da 
+gerçekleştirmeniz gerekmektedir.  
+ii. Bu sorgular  select.sql isimli dosyaya kaydedilecektir.  
+iii. Sadece derste işlenen konular ile çözümler kabul edilecektir. 
+Prosedür , fonksiyon, with gibi ders içeriğinde olmayan yapılar  ile 
+gerçekleştirilen çözümler kabul edilmeyecektir.  
+ 
+5. DOSYA GÖNDERİMİ  
+i. Gruplar, eğer düzeltme istenmiş ise düzeltilmiş E -R diyagramlarını 
+(VTS_GXY_ER_ v2.pdf), veri tabanı oluşturma  scriptlerini (create.sql)  
+ve sorgu dosyalarını  (select.sql) tek bir ZIP ya da RAR dosyası 
+içerisinde göndereceklerdir . Düzeltme istenmeyen E -R 
+diyagramlarının tekrar gönderilmesine gerek yoktur.  
+ii. Dosya gönderim adresi: http://tiny.cc/mutekin16u  
+iii. Gönderilecek dosya ismi VTS_GXY .ZIP ya da  VTS_GXY .RAR  biçiminde 
+olmalıdır . XY olan yere grup numarası yazılacaktır.    
+iv. Başka formatta gönderilen dosyalar değerlendirmeye alınmayacaktır.  
+v. Her gruptan bir kişinin bu dosyayı yüklemesi yeterlidir. Lütfen 
+mükerrer gönderim yapmayınız.  
+ 
+ 
+ 
+ 
+ 
+PROJE ADIMLARI İÇİN SON  TARİHLER  
+ 
+ADIM  SON TARİH  HAFTA  
+Konu Belirleme  06.03.202 6 3 
+Varlık -İlişki Diyagramı PDF Gönderimi  17.04.202 6 9 
+Create ve Select Dosya Gönderimi  22.05.202 6 14 
+ 

@@ -1,0 +1,116 @@
+--- Page 1 ---
+ASKERİ SİSTEM YÖNETİMİ  
+Asker ve askeri birimlerle ilgili kayıtların tutulacağı  bir sistem  tasarlanacaktır . Söz 
+konusu sisteme ait veri tabanı gereksinimler i aşağıda verilmiştir.  
+ 
+1) Askerlere ait aşağıdaki bilgilerin kaydedilmesi gerekmektedir : 
+• T.C. kimlik numarası  
+• Ad 
+• Soyad  
+• Cinsiyet  
+• Doğum tarihi  
+• Yaş 
+• İl 
+• İlçe 
+• Mahalle  
+• Cadde / Sokak  
+• Dış kapı no  
+• İç kapı no  
+• Adres açıklaması  
+• Telefon  
+• Atış durumu (yaptı / yapmadı)  
+• Askerlik süresi (gün)  
+• Toplam izin süresi (gün)  
+• Kullanılan izin süresi (gün)  
+• Kalan izin süresi (gün)  
+• Alınan disiplin cezası (gün)  
+• Teslim tarihi  
+• Terhis tarihi (teslim tarihi + askerlik süresi  + disiplin cezası - toplam 
+izin süresi)  
+• Rütbe (er, onbaşı, çavuş, vb.)  
+• Durum (devam ediyor / bitirdi)  
+2) Askerlerin kullandıkları her bir izin sistemde kaydedilmelidir. Her bir izin 
+kaydı için aşağıdaki bilgilerin saklanması gerekir:  
+• İzin süresi (gün)  
+• Yol süresi (gün)  
+• Başlangıç tarihi  
+• Bitiş tarihi (Başlangıç tarihi + İzin süresi + Yol süresi)  
+--- Page 2 ---
+• Görev biriminden  gerçekte ayrıldığı tarih ve saat  
+• Görev birimine gerçekte  geri döndüğü tarih ve saat  
+3) Her asker farklı tarih aralıklarında farklı birim lerde görev yapabilmektedir. 
+Dolayısıyla aşağıdaki bilgilerin saklanması gerekir:  
+• Askerin birimd e göreve başladığı tarih  
+• Askerin birimden  ayrıldığı tarih  
+4) Askeri birimler hiyerarşik bir yapıdadır. Örneğin kara kuvvetleri komutanlığı 
+altında çeşitli tugaylar ve onların altında da çeşitli alaylar ve onların altında 
+da daha alt birimler bulunmaktadır. Dolayısıyla birimlere ait aşağıdaki 
+bilgilerin saklanması gerekir:  
+• Birim adı  
+• Bulunduğu il  
+• Bulunduğu ilçe  
+• Adres açıklaması  
+• Telefon  
+• Durum (aktif / pasif)  
+• Kuruluş tarihi  
+• Dahil olduğu sınıf (kara, hava, tank, vb.)  
+5) Her bir birimde birçok farklı kategoride teçhizatlar bulunmaktadır. 
+Birimlerdeki bu teçhizatlara ait aşağıdaki bilgilerin saklanması gerekir:  
+• Seri numarası  
+• Ad 
+• Açıklama  
+• Durum (aktif / pasif)  
+• Türü (silah, araç, giysi, vb.)  
+6) Teçhizatlar zaman içerisinde farklı birimler arasında transfer edilebilirler . 
+Dolayısıyla her bir teçhizatın hangi tarih aralıklarında hangi birimde görev 
+yaptığı bilgisi de sistemde kaydedilmelidir.  
+7) Benzer şekilde teçhizatlar belirli tarih aralıklarında belirli bir askere zimmet 
+olarak verilirler. Bu bilgilerin de sistemde kaydedilmesi gerekmektedir.  
+8) Her birimin kendisine ait birden çok nöbet yeri vardır. Nöbet yerlerine  ait 
+aşağıdaki bilgilerin saklanması gerekir:  
+• Ad 
+• Silah durumu (silahlı / silahsız)  
+9) Her bir asker, askerliği süresince birçok farklı nöbet yerinde nöbet tutar . 
+Nöbetlere ait aşağıdaki bilgiler de sistemde kaydedilmelidir:  
+• Nöbet başlangıcı (tarih -saat)  
+--- Page 3 ---
+• Nöbet bitiş (tarih -saat)  
+• Verilen mermi gramajı (eğer silahlı bir nöbet yeriyse yazılır)  
+• Getirilen mermi gramajı (eğer silahlı bir nöbet yeriyse yazılır)  
+10) Askerler gün içinde birkaç kez yoklama veya benzeri nedenlerden ötürü 
+içtimaa çağrılırlar. Bu çağırımların ne zaman olduğu , toplam olması gereken 
+asker sayısı, toplam olan asker sayısı, onaylayan asker  ve her birinde 
+kimlerin hazır bulunduğu bilgisi de sistemde kaydedilebilmelidir.  
+11) Disiplin kurallarına uymayan askerlere disiplin cezası verilmektedir.  Bundan 
+dolayı aşağıdaki bilgilerin kaydedilmesi gereklidir:  
+• Ceza sebebi (izinsiz birliği terk etme, izinden geç gelme, vb.)  
+• Ceza başlangıç tarihi  
+• Ceza bitiş tarihi  
+12) Askerlik hizmeti süresince askerlerin belirli tarih aralıklarında çıktıkları 
+operasyonlara ait aşağıdaki bilgiler de kaydedilmelidir.  
+• Operasyon adı  
+• Operasyona katılacak birimler  
+• Operasyona katılacak askerler  
+• Operasyonda kullanılacak teçhizatlar  
+• Operasyon başlangıç tarihi  
+• Operasyon bitiş tarihi  
+• Açıklama  
+13) Askerler farklı zamanlarda farklı türde eğitimler almaktadırlar. Hangi tarih -
+saat aralığında hangi askerlerin hangi tür eğitim aldıkları bilgisinin de 
+sistemde kaydedilmesi gereklidir.  
+14) Askerlerin farklı tarihlerde yaptıkları farklı türde atışların (25m, 400m, vb.) 
+atış lokasyon bilgisiyle birlikte sistemde kaydedilmesi gereklidir.  
+ 
+--- Page 4 ---
+SORGULAR : 
+1) En çok nöbet yeri olan ilk üç birimin hepsinde askerlik yapmış kişilerin T.C. 
+kimlik numarasını, son nöbet tarihini, son birliğinin ismini ve geçen sene 
+(sistemden tarihine göre otomatik belirlenecektir) çıktıkları toplam 
+operasyon sayısını getirecek sorguyu yazınız. Sıralama, operasyon sayısı > 
+20 ise asker kimlik numarasına göre z -a, değilse birlik ismine göre a -z 
+olacaktır.  
+2) Yalova ilindeki birliklerde bulunan patlayıcı türündeki tüm teçhizatların 
+seri numaralarını, kaç defa bir askere verildiğini, kaç farklı askere 
+verildiğini ve İstanbullu kaç askere verildiğini getirecek sorguyu yazınız. 
+Verilmemiş teçhizatlar için ilgili değerler sıfır yazılacaktır.  
+ 
