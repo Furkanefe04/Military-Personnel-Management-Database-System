@@ -1,7 +1,14 @@
-﻿IF DB_ID('AskeriYonetimSistemi') IS NULL
+USE master;
+GO
+
+IF DB_ID('AskeriYonetimSistemi') IS NOT NULL
 BEGIN
-    EXEC('CREATE DATABASE AskeriYonetimSistemi');
+    ALTER DATABASE AskeriYonetimSistemi SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE AskeriYonetimSistemi;
 END
+GO
+
+CREATE DATABASE AskeriYonetimSistemi;
 GO
 
 USE AskeriYonetimSistemi;
@@ -313,12 +320,4 @@ CREATE TABLE Atis (
     CONSTRAINT FK_Atis_AtisTuru FOREIGN KEY (atis_tur_no) REFERENCES AtisTuru(atis_tur_no),
     CONSTRAINT FK_Atis_AtisLokasyonu FOREIGN KEY (atis_lokasyon_no) REFERENCES AtisLokasyonu(atis_lokasyon_no)
 );
-
-CREATE INDEX IX_GorevYapar_Asker ON GorevYapar(asker_no, baslama_tarihi, ayrilma_tarihi);
-CREATE INDEX IX_GorevYapar_Birim ON GorevYapar(birim_no);
-CREATE INDEX IX_TransferOlur_Birim ON TransferOlur(birim_no, baslama_tarihi, bitis_tarihi);
-CREATE INDEX IX_Zimmetlenir_Techizat ON Zimmetlenir(techizat_no);
-CREATE INDEX IX_NobetTutar_Asker ON NobetTutar(asker_no, baslangic_tarih_saat);
-CREATE INDEX IX_NobetYeri_Birim ON NobetYeri(birim_no);
-CREATE INDEX IX_OpKatilir_Asker ON OpKatilir(asker_no);
 GO

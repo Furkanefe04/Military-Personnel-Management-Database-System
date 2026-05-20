@@ -1,11 +1,6 @@
 ﻿USE AskeriYonetimSistemi;
 GO
 
-/*
-1) En cok nobet yeri olan ilk uc birimin hepsinde askerlik yapmis kisilerin
-   T.C. kimlik numarasini, son nobet tarihini, son birliginin ismini ve
-   gecen sene ciktiklari toplam operasyon sayisini getirir.
-*/
 SELECT
     Sorgu1.tc_kimlik_no,
     Sorgu1.son_nobet_tarihi,
@@ -61,12 +56,7 @@ ORDER BY
     CASE WHEN Sorgu1.gecen_sene_operasyon_sayisi <= 20 THEN Sorgu1.son_birlik_ismi ELSE NULL END ASC;
 GO
 
-/*
-2) Yalova ilindeki birliklerde bulunan patlayici turundeki tum techizatlarin
-   seri numaralarini, kac defa bir askere verildigini, kac farkli askere
-   verildigini ve Istanbullu kac askere verildigini getirir.
-   Verilmemis techizatlar icin sayilar 0 olur.
-*/
+
 SELECT
     T.seri_numarasi,
     COUNT(TAZ.techizat_asker_zimmet_no) AS askere_verilme_sayisi,
