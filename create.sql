@@ -321,3 +321,5 @@ CREATE TABLE Atis (
     FOREIGN KEY (atis_lokasyon_no) REFERENCES AtisLokasyonu(atis_lokasyon_no)
 );
 GO
+
+

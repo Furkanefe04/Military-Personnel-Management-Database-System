@@ -1,426 +1,1936 @@
 USE AskeriYonetimSistemi;
 GO
-
 SET NOCOUNT ON;
 
-INSERT INTO Il (il_adi)
-SELECT V.il_adi
-FROM (VALUES (N'İstanbul'), (N'Yalova'), (N'Ankara'), (N'İzmir'), (N'Adana'), (N'Trabzon')) V(il_adi)
-WHERE NOT EXISTS (SELECT 1 FROM Il I WHERE I.il_adi = V.il_adi);
+-- 0. Veritabanı Temizleme (Foreign Key sırasına uygun)
+DELETE FROM Atis;
+DELETE FROM EgitimAlir;
+DELETE FROM Egitim;
+DELETE FROM OpKullanilir;
+DELETE FROM OpKatilir;
+DELETE FROM BirimOpKatilir;
+DELETE FROM Operasyon;
+DELETE FROM YoklamadaBulunur;
+DELETE FROM Ictima;
+DELETE FROM DisiplinCezasi;
+DELETE FROM NobetTutar;
+DELETE FROM NobetYeri;
+DELETE FROM Zimmetlenir;
+DELETE FROM TransferOlur;
+DELETE FROM Techizat;
+DELETE FROM Izin;
+DELETE FROM GorevYapar;
+DELETE FROM Birim;
+DELETE FROM Asker;
+DELETE FROM AtisLokasyonu;
+DELETE FROM AtisTuru;
+DELETE FROM EgitimTuru;
+DELETE FROM CezaSebebi;
+DELETE FROM TechizatTuru;
+DELETE FROM BirimSinifi;
+DELETE FROM Rutbe;
+DELETE FROM CaddeSokak;
+DELETE FROM Mahalle;
+DELETE FROM Ilce;
+DELETE FROM Il;
 
-INSERT INTO Ilce (il_no, ilce_adi)
-SELECT I.il_no, V.ilce_adi
-FROM Il I
-INNER JOIN (VALUES
-    (N'İstanbul', N'Kadıköy'), (N'İstanbul', N'Üsküdar'), (N'İstanbul', N'Beyoğlu'),
-    (N'Yalova', N'Merkez'), (N'Yalova', N'Çiftlikköy'),
-    (N'Ankara', N'Çankaya'), (N'İzmir', N'Konak'),
-    (N'Adana', N'Seyhan'), (N'Trabzon', N'Ortahisar')
-) V(il_adi, ilce_adi) ON V.il_adi = I.il_adi
-WHERE NOT EXISTS (SELECT 1 FROM Ilce ILCE WHERE ILCE.il_no = I.il_no AND ILCE.ilce_adi = V.ilce_adi);
+-- Identity Seed Sıfırlama
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Atis') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Atis', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Egitim') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Egitim', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Operasyon') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Operasyon', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Ictima') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Ictima', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('DisiplinCezasi') AND last_value IS NOT NULL) DBCC CHECKIDENT ('DisiplinCezasi', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('NobetTutar') AND last_value IS NOT NULL) DBCC CHECKIDENT ('NobetTutar', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('NobetYeri') AND last_value IS NOT NULL) DBCC CHECKIDENT ('NobetYeri', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Zimmetlenir') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Zimmetlenir', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('TransferOlur') AND last_value IS NOT NULL) DBCC CHECKIDENT ('TransferOlur', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Techizat') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Techizat', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Izin') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Izin', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('GorevYapar') AND last_value IS NOT NULL) DBCC CHECKIDENT ('GorevYapar', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Birim') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Birim', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Asker') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Asker', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('AtisLokasyonu') AND last_value IS NOT NULL) DBCC CHECKIDENT ('AtisLokasyonu', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('AtisTuru') AND last_value IS NOT NULL) DBCC CHECKIDENT ('AtisTuru', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('EgitimTuru') AND last_value IS NOT NULL) DBCC CHECKIDENT ('EgitimTuru', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('CezaSebebi') AND last_value IS NOT NULL) DBCC CHECKIDENT ('CezaSebebi', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('TechizatTuru') AND last_value IS NOT NULL) DBCC CHECKIDENT ('TechizatTuru', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('BirimSinifi') AND last_value IS NOT NULL) DBCC CHECKIDENT ('BirimSinifi', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Rutbe') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Rutbe', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('CaddeSokak') AND last_value IS NOT NULL) DBCC CHECKIDENT ('CaddeSokak', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Mahalle') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Mahalle', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Ilce') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Ilce', RESEED, 0);
+IF EXISTS (SELECT 1 FROM sys.identity_columns WHERE object_id = OBJECT_ID('Il') AND last_value IS NOT NULL) DBCC CHECKIDENT ('Il', RESEED, 0);
+GO
 
-INSERT INTO Mahalle (ilce_no, mahalle_adi)
-SELECT ILCE.ilce_no, V.mahalle_adi
-FROM Ilce ILCE
-INNER JOIN Il I ON I.il_no = ILCE.il_no
-INNER JOIN (VALUES
-    (N'İstanbul', N'Kadıköy', N'Koşuyolu'), (N'İstanbul', N'Üsküdar', N'Altunizade'), (N'İstanbul', N'Beyoğlu', N'Cihangir'),
-    (N'Yalova', N'Merkez', N'Bahçelievler'), (N'Yalova', N'Çiftlikköy', N'Sahil'),
-    (N'Ankara', N'Çankaya', N'Kızılay'), (N'İzmir', N'Konak', N'Alsancak'),
-    (N'Adana', N'Seyhan', N'Barajyolu'), (N'Trabzon', N'Ortahisar', N'Boztepe')
-) V(il_adi, ilce_adi, mahalle_adi)
-    ON V.il_adi = I.il_adi AND V.ilce_adi = ILCE.ilce_adi
-WHERE NOT EXISTS (SELECT 1 FROM Mahalle M WHERE M.ilce_no = ILCE.ilce_no AND M.mahalle_adi = V.mahalle_adi);
+-- 1. Il Tablosu
+INSERT INTO Il (il_adi) VALUES (N'İstanbul');
+INSERT INTO Il (il_adi) VALUES (N'Yalova');
+INSERT INTO Il (il_adi) VALUES (N'Ankara');
+INSERT INTO Il (il_adi) VALUES (N'İzmir');
+INSERT INTO Il (il_adi) VALUES (N'Adana');
+INSERT INTO Il (il_adi) VALUES (N'Trabzon');
+INSERT INTO Il (il_adi) VALUES (N'Diyarbakır');
+INSERT INTO Il (il_adi) VALUES (N'Antalya');
+GO
 
-INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi)
-SELECT M.mahalle_no, V.cadde_sokak_adi
-FROM Mahalle M
-INNER JOIN Ilce ILCE ON ILCE.ilce_no = M.ilce_no
-INNER JOIN Il I ON I.il_no = ILCE.il_no
-INNER JOIN (VALUES
-    (N'İstanbul', N'Kadıköy', N'Koşuyolu', N'Vadi Sokak'),
-    (N'İstanbul', N'Üsküdar', N'Altunizade', N'Karaeski Caddesi'),
-    (N'İstanbul', N'Beyoğlu', N'Cihangir', N'İçerde Sokak'),
-    (N'Yalova', N'Merkez', N'Bahçelievler', N'Komando Sokak'),
-    (N'Yalova', N'Çiftlikköy', N'Sahil', N'Liman Caddesi'),
-    (N'Ankara', N'Çankaya', N'Kızılay', N'Kuzey Caddesi'),
-    (N'İzmir', N'Konak', N'Alsancak', N'Güney Sokak'),
-    (N'Adana', N'Seyhan', N'Barajyolu', N'Sıfır Bir Sokak'),
-    (N'Trabzon', N'Ortahisar', N'Boztepe', N'Kartal Caddesi')
-) V(il_adi, ilce_adi, mahalle_adi, cadde_sokak_adi)
-    ON V.il_adi = I.il_adi AND V.ilce_adi = ILCE.ilce_adi AND V.mahalle_adi = M.mahalle_adi
-WHERE NOT EXISTS (SELECT 1 FROM CaddeSokak CS WHERE CS.mahalle_no = M.mahalle_no AND CS.cadde_sokak_adi = V.cadde_sokak_adi);
+-- 2. Ilce Tablosu
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Kadıköy' FROM Il WHERE il_adi = N'İstanbul';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Beşiktaş' FROM Il WHERE il_adi = N'İstanbul';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Merkez' FROM Il WHERE il_adi = N'Yalova';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Çiftlikköy' FROM Il WHERE il_adi = N'Yalova';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Çankaya' FROM Il WHERE il_adi = N'Ankara';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Mamak' FROM Il WHERE il_adi = N'Ankara';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Konak' FROM Il WHERE il_adi = N'İzmir';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Bornova' FROM Il WHERE il_adi = N'İzmir';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Seyhan' FROM Il WHERE il_adi = N'Adana';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Ortahisar' FROM Il WHERE il_adi = N'Trabzon';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Sur' FROM Il WHERE il_adi = N'Diyarbakır';
+INSERT INTO Ilce (il_no, ilce_adi) SELECT il_no, N'Muratpaşa' FROM Il WHERE il_adi = N'Antalya';
+GO
 
-INSERT INTO Rutbe (rutbe_adi)
-SELECT V.rutbe_adi
-FROM (VALUES (N'Er'), (N'Onbaşı'), (N'Çavuş'), (N'Uzman Çavuş'), (N'Asteğmen')) V(rutbe_adi)
-WHERE NOT EXISTS (SELECT 1 FROM Rutbe R WHERE R.rutbe_adi = V.rutbe_adi);
+-- 3. Mahalle Tablosu
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Moda' FROM Ilce WHERE ilce_adi = N'Kadıköy';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Bebek' FROM Ilce WHERE ilce_adi = N'Beşiktaş';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Bahçelievler' FROM Ilce WHERE ilce_adi = N'Merkez';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Sahil' FROM Ilce WHERE ilce_adi = N'Çiftlikköy';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Kavaklıdere' FROM Ilce WHERE ilce_adi = N'Çankaya';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Tuzluçayır' FROM Ilce WHERE ilce_adi = N'Mamak';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Alsancak' FROM Ilce WHERE ilce_adi = N'Konak';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Erzene' FROM Ilce WHERE ilce_adi = N'Bornova';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Barajyolu' FROM Ilce WHERE ilce_adi = N'Seyhan';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Boztepe' FROM Ilce WHERE ilce_adi = N'Ortahisar';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Cami Kebir' FROM Ilce WHERE ilce_adi = N'Sur';
+INSERT INTO Mahalle (ilce_no, mahalle_adi) SELECT ilce_no, N'Liman' FROM Ilce WHERE ilce_adi = N'Muratpaşa';
+GO
 
-INSERT INTO BirimSinifi (sinif_adi)
-SELECT V.sinif_adi
-FROM (VALUES (N'Kara'), (N'Hava'), (N'Deniz'), (N'Tank'), (N'Komando'), (N'Lojistik')) V(sinif_adi)
-WHERE NOT EXISTS (SELECT 1 FROM BirimSinifi BS WHERE BS.sinif_adi = V.sinif_adi);
+-- 4. CaddeSokak Tablosu
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Moda Caddesi' FROM Mahalle WHERE mahalle_adi = N'Moda';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Şair Nefi Sokak' FROM Mahalle WHERE mahalle_adi = N'Moda';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Cevdet Paşa Caddesi' FROM Mahalle WHERE mahalle_adi = N'Bebek';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Bebek Yokuşu' FROM Mahalle WHERE mahalle_adi = N'Bebek';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Komando Sokak' FROM Mahalle WHERE mahalle_adi = N'Bahçelievler';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Fatih Caddesi' FROM Mahalle WHERE mahalle_adi = N'Bahçelievler';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Liman Caddesi' FROM Mahalle WHERE mahalle_adi = N'Sahil';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Yalı Sokak' FROM Mahalle WHERE mahalle_adi = N'Sahil';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Tunalı Hilmi Caddesi' FROM Mahalle WHERE mahalle_adi = N'Kavaklıdere';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Bülten Sokak' FROM Mahalle WHERE mahalle_adi = N'Kavaklıdere';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Tıp Fakültesi Caddesi' FROM Mahalle WHERE mahalle_adi = N'Tuzluçayır';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Dere Sokak' FROM Mahalle WHERE mahalle_adi = N'Tuzluçayır';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Kıbrıs Şehitleri Caddesi' FROM Mahalle WHERE mahalle_adi = N'Alsancak';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Gül Sokak' FROM Mahalle WHERE mahalle_adi = N'Alsancak';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Gençlik Caddesi' FROM Mahalle WHERE mahalle_adi = N'Erzene';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Çam Sokak' FROM Mahalle WHERE mahalle_adi = N'Erzene';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Sıfır Bir Sokak' FROM Mahalle WHERE mahalle_adi = N'Barajyolu';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Baraj Caddesi' FROM Mahalle WHERE mahalle_adi = N'Barajyolu';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Kartal Caddesi' FROM Mahalle WHERE mahalle_adi = N'Boztepe';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Boztepe Yokuşu' FROM Mahalle WHERE mahalle_adi = N'Boztepe';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Gazi Caddesi' FROM Mahalle WHERE mahalle_adi = N'Cami Kebir';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Melikahmet Sokak' FROM Mahalle WHERE mahalle_adi = N'Cami Kebir';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Akdeniz Bulvarı' FROM Mahalle WHERE mahalle_adi = N'Liman';
+INSERT INTO CaddeSokak (mahalle_no, cadde_sokak_adi) SELECT mahalle_no, N'Liman Sokak' FROM Mahalle WHERE mahalle_adi = N'Liman';
+GO
 
-INSERT INTO TechizatTuru (tur_adi)
-SELECT V.tur_adi
-FROM (VALUES (N'Silah'), (N'Araç'), (N'Giysi'), (N'Patlayıcı'), (N'Haberleşme'), (N'Tıbbi')) V(tur_adi)
-WHERE NOT EXISTS (SELECT 1 FROM TechizatTuru TT WHERE TT.tur_adi = V.tur_adi);
+-- 5. Rutbe
+INSERT INTO Rutbe (rutbe_adi) VALUES (N'Er');
+INSERT INTO Rutbe (rutbe_adi) VALUES (N'Onbaşı');
+INSERT INTO Rutbe (rutbe_adi) VALUES (N'Çavuş');
+INSERT INTO Rutbe (rutbe_adi) VALUES (N'Uzman Çavuş');
+INSERT INTO Rutbe (rutbe_adi) VALUES (N'Asteğmen');
+GO
 
-INSERT INTO CezaSebebi (sebep_adi)
-SELECT V.sebep_adi
-FROM (VALUES (N'İzinsiz birliği terk etme'), (N'İzinden geç gelme'), (N'Emre itaatsizlik'), (N'Nöbet ihlali'), (N'Eğitime geç katılma')) V(sebep_adi)
-WHERE NOT EXISTS (SELECT 1 FROM CezaSebebi CS WHERE CS.sebep_adi = V.sebep_adi);
+-- 6. BirimSinifi
+INSERT INTO BirimSinifi (sinif_adi) VALUES (N'Kara');
+INSERT INTO BirimSinifi (sinif_adi) VALUES (N'Hava');
+INSERT INTO BirimSinifi (sinif_adi) VALUES (N'Deniz');
+INSERT INTO BirimSinifi (sinif_adi) VALUES (N'Tank');
+INSERT INTO BirimSinifi (sinif_adi) VALUES (N'Komando');
+INSERT INTO BirimSinifi (sinif_adi) VALUES (N'Lojistik');
+GO
 
-INSERT INTO EgitimTuru (tur_adi)
-SELECT V.tur_adi
-FROM (VALUES (N'Temel Eğitim'), (N'Atış Eğitimi'), (N'İlk Yardım'), (N'Operasyon Hazırlık'), (N'Araç Kullanımı')) V(tur_adi)
-WHERE NOT EXISTS (SELECT 1 FROM EgitimTuru ET WHERE ET.tur_adi = V.tur_adi);
+-- 7. TechizatTuru
+INSERT INTO TechizatTuru (tur_adi) VALUES (N'Silah');
+INSERT INTO TechizatTuru (tur_adi) VALUES (N'Araç');
+INSERT INTO TechizatTuru (tur_adi) VALUES (N'Giysi');
+INSERT INTO TechizatTuru (tur_adi) VALUES (N'Patlayıcı');
+INSERT INTO TechizatTuru (tur_adi) VALUES (N'Haberleşme');
+INSERT INTO TechizatTuru (tur_adi) VALUES (N'Tıbbi');
+GO
 
-INSERT INTO AtisTuru (tur_adi)
-SELECT V.tur_adi
-FROM (VALUES (N'25m'), (N'100m'), (N'200m'), (N'400m')) V(tur_adi)
-WHERE NOT EXISTS (SELECT 1 FROM AtisTuru AT WHERE AT.tur_adi = V.tur_adi);
+-- 8. CezaSebebi
+INSERT INTO CezaSebebi (sebep_adi) VALUES (N'İzinsiz birliği terk etme');
+INSERT INTO CezaSebebi (sebep_adi) VALUES (N'İzinden geç gelme');
+INSERT INTO CezaSebebi (sebep_adi) VALUES (N'Emre itaatsizlik');
+INSERT INTO CezaSebebi (sebep_adi) VALUES (N'Nöbet ihlali');
+INSERT INTO CezaSebebi (sebep_adi) VALUES (N'Eğitime geç katılma');
+GO
 
-INSERT INTO AtisLokasyonu (lokasyon_adi, il_no, ilce_no, adres_aciklamasi)
-SELECT V.lokasyon_adi, I.il_no, ILCE.ilce_no, V.adres_aciklamasi
-FROM (VALUES
-    (N'Yalova Merkez Atış Alanı', N'Yalova', N'Merkez', N'Bahçelievler eğitim sahası'),
-    (N'Ankara Kapalı Poligon', N'Ankara', N'Çankaya', N'Kızılay kapalı poligon'),
-    (N'Adana Açık Atış Sahası', N'Adana', N'Seyhan', N'Barajyolu açık saha')
-) V(lokasyon_adi, il_adi, ilce_adi, adres_aciklamasi)
-INNER JOIN Il I ON I.il_adi = V.il_adi
-INNER JOIN Ilce ILCE ON ILCE.il_no = I.il_no AND ILCE.ilce_adi = V.ilce_adi
-WHERE NOT EXISTS (SELECT 1 FROM AtisLokasyonu AL WHERE AL.lokasyon_adi = V.lokasyon_adi);
+-- 9. EgitimTuru
+INSERT INTO EgitimTuru (tur_adi) VALUES (N'Temel Eğitim');
+INSERT INTO EgitimTuru (tur_adi) VALUES (N'Atış Eğitimi');
+INSERT INTO EgitimTuru (tur_adi) VALUES (N'İlk Yardım');
+INSERT INTO EgitimTuru (tur_adi) VALUES (N'Operasyon Hazırlık');
+INSERT INTO EgitimTuru (tur_adi) VALUES (N'Araç Kullanımı');
+GO
 
-INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no)
-SELECT NULL, V.birim_adi, ILCE.ilce_no, V.adres_aciklamasi, V.telefon, N'AKTIF', V.kurulus_tarihi, BS.birim_sinif_no
-FROM (VALUES
-    (N'Yalova 1. Komando Tugayı', N'Yalova', N'Merkez', N'Yalova merkez komando yerleşkesi', N'02260000001', CAST('2001-01-10' AS DATE), N'Komando'),
-    (N'Yalova 2. Kara Tugayı', N'Yalova', N'Çiftlikköy', N'Çiftlikköy kara birlikleri sahası', N'02260000002', CAST('2003-04-12' AS DATE), N'Kara'),
-    (N'Ankara 3. Tank Taburu', N'Ankara', N'Çankaya', N'Ankara zırhlı birlik sahası', N'03120000001', CAST('1999-09-01' AS DATE), N'Tank'),
-    (N'İzmir Hava Bakım Birliği', N'İzmir', N'Konak', N'İzmir hava bakım sahası', N'02320000001', CAST('2005-06-17' AS DATE), N'Hava'),
-    (N'Adana Lojistik Birliği', N'Adana', N'Seyhan', N'Adana lojistik destek alanı', N'03220000001', CAST('2010-02-20' AS DATE), N'Lojistik'),
-    (N'Trabzon Deniz Destek Birliği', N'Trabzon', N'Ortahisar', N'Trabzon deniz destek alanı', N'04620000001', CAST('2012-03-22' AS DATE), N'Deniz')
-) V(birim_adi, il_adi, ilce_adi, adres_aciklamasi, telefon, kurulus_tarihi, sinif_adi)
-INNER JOIN Il I ON I.il_adi = V.il_adi
-INNER JOIN Ilce ILCE ON ILCE.il_no = I.il_no AND ILCE.ilce_adi = V.ilce_adi
-INNER JOIN BirimSinifi BS ON BS.sinif_adi = V.sinif_adi
-WHERE NOT EXISTS (SELECT 1 FROM Birim B WHERE B.birim_adi = V.birim_adi);
+-- 10. AtisTuru
+INSERT INTO AtisTuru (tur_adi) VALUES (N'25m');
+INSERT INTO AtisTuru (tur_adi) VALUES (N'100m');
+INSERT INTO AtisTuru (tur_adi) VALUES (N'200m');
+INSERT INTO AtisTuru (tur_adi) VALUES (N'400m');
+GO
 
-INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no)
-SELECT Ust.birim_no, V.birim_adi, Ust.ilce_no, V.adres_aciklamasi, V.telefon, N'AKTIF', V.kurulus_tarihi, Ust.birim_sinif_no
-FROM (VALUES
-    (N'Yalova 1. Komando Tugayı', N'1. Komando Bölüğü', N'Birinci komando bölüğü', N'02260000101', CAST('2015-01-01' AS DATE)),
-    (N'Yalova 1. Komando Tugayı', N'2. Komando Bölüğü', N'İkinci komando bölüğü', N'02260000102', CAST('2015-01-01' AS DATE)),
-    (N'Yalova 2. Kara Tugayı', N'1. Piyade Bölüğü', N'Birinci piyade bölüğü', N'02260000201', CAST('2016-02-01' AS DATE)),
-    (N'Ankara 3. Tank Taburu', N'1. Tank Bölüğü', N'Birinci tank bölüğü', N'03120000101', CAST('2014-07-07' AS DATE)),
-    (N'Adana Lojistik Birliği', N'1. Bakım Bölüğü', N'Bakım ve ikmal bölüğü', N'03220000101', CAST('2017-08-08' AS DATE)),
-    (N'Trabzon Deniz Destek Birliği', N'1. Destek Bölüğü', N'Deniz destek bölüğü', N'04620000101', CAST('2018-09-09' AS DATE))
-) V(ust_birim_adi, birim_adi, adres_aciklamasi, telefon, kurulus_tarihi)
-INNER JOIN Birim Ust ON Ust.birim_adi = V.ust_birim_adi
-WHERE NOT EXISTS (SELECT 1 FROM Birim B WHERE B.birim_adi = V.birim_adi);
+-- 11. AtisLokasyonu
+INSERT INTO AtisLokasyonu (lokasyon_adi, il_no, ilce_no, adres_aciklamasi) SELECT N'Yalova Merkez Atış Alanı', I.il_no, IL.ilce_no, N'Yalova Merkez mevkii' FROM Il I INNER JOIN Ilce IL ON IL.il_no = I.il_no WHERE I.il_adi = N'Yalova' AND IL.ilce_adi = N'Merkez';
+INSERT INTO AtisLokasyonu (lokasyon_adi, il_no, ilce_no, adres_aciklamasi) SELECT N'Ankara Çankaya Atış Poligonu', I.il_no, IL.ilce_no, N'Çankaya askeri poligonu' FROM Il I INNER JOIN Ilce IL ON IL.il_no = I.il_no WHERE I.il_adi = N'Ankara' AND IL.ilce_adi = N'Çankaya';
+GO
 
-DECLARE @i INT;
-DECLARE @cadde_sayisi INT = (SELECT COUNT(*) FROM CaddeSokak);
-DECLARE @rutbe_sayisi INT = (SELECT COUNT(*) FROM Rutbe);
-DECLARE @birim_sayisi INT = (SELECT COUNT(*) FROM Birim);
-DECLARE @techizat_tur_sayisi INT = (SELECT COUNT(*) FROM TechizatTuru);
-DECLARE @ceza_sebep_sayisi INT = (SELECT COUNT(*) FROM CezaSebebi);
-DECLARE @egitim_tur_sayisi INT = (SELECT COUNT(*) FROM EgitimTuru);
-DECLARE @atis_tur_sayisi INT = (SELECT COUNT(*) FROM AtisTuru);
-DECLARE @atis_lokasyon_sayisi INT = (SELECT COUNT(*) FROM AtisLokasyonu);
-DECLARE @current_datetime DATETIME2 = CAST(GETDATE() AS DATE);
+-- 12. Birim Tablosu
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT NULL, N'Yalova 1. Komando Tugayı', ILCE.ilce_no, N'Yalova merkez komando yerleşkesi', N'02260000001', N'AKTIF', CAST('2001-01-10' AS DATE), BS.birim_sinif_no FROM Ilce ILCE INNER JOIN Il I ON I.il_no = ILCE.il_no INNER JOIN BirimSinifi BS ON BS.sinif_adi = N'Komando' WHERE I.il_adi = N'Yalova' AND ILCE.ilce_adi = N'Merkez';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT NULL, N'Yalova 2. Kara Tugayı', ILCE.ilce_no, N'Çiftlikköy kara birlikleri sahası', N'02260000002', N'AKTIF', CAST('2003-04-12' AS DATE), BS.birim_sinif_no FROM Ilce ILCE INNER JOIN Il I ON I.il_no = ILCE.il_no INNER JOIN BirimSinifi BS ON BS.sinif_adi = N'Kara' WHERE I.il_adi = N'Yalova' AND ILCE.ilce_adi = N'Çiftlikköy';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT NULL, N'Ankara 3. Tank Taburu', ILCE.ilce_no, N'Ankara zırhlı birlik sahası', N'03120000001', N'AKTIF', CAST('1999-09-01' AS DATE), BS.birim_sinif_no FROM Ilce ILCE INNER JOIN Il I ON I.il_no = ILCE.il_no INNER JOIN BirimSinifi BS ON BS.sinif_adi = N'Tank' WHERE I.il_adi = N'Ankara' AND ILCE.ilce_adi = N'Çankaya';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT NULL, N'İzmir Hava Bakım Birliği', ILCE.ilce_no, N'İzmir hava bakım sahası', N'02320000001', N'AKTIF', CAST('2005-06-17' AS DATE), BS.birim_sinif_no FROM Ilce ILCE INNER JOIN Il I ON I.il_no = ILCE.il_no INNER JOIN BirimSinifi BS ON BS.sinif_adi = N'Hava' WHERE I.il_adi = N'İzmir' AND ILCE.ilce_adi = N'Konak';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT NULL, N'Adana Lojistik Birliği', ILCE.ilce_no, N'Adana lojistik destek alanı', N'03220000001', N'AKTIF', CAST('2010-02-20' AS DATE), BS.birim_sinif_no FROM Ilce ILCE INNER JOIN Il I ON I.il_no = ILCE.il_no INNER JOIN BirimSinifi BS ON BS.sinif_adi = N'Lojistik' WHERE I.il_adi = N'Adana' AND ILCE.ilce_adi = N'Seyhan';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT NULL, N'Trabzon Deniz Destek Birliği', ILCE.ilce_no, N'Trabzon deniz destek alanı', N'04620000001', N'AKTIF', CAST('2012-03-22' AS DATE), BS.birim_sinif_no FROM Ilce ILCE INNER JOIN Il I ON I.il_no = ILCE.il_no INNER JOIN BirimSinifi BS ON BS.sinif_adi = N'Deniz' WHERE I.il_adi = N'Trabzon' AND ILCE.ilce_adi = N'Ortahisar';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT Ust.birim_no, N'1. Komando Bölüğü', Ust.ilce_no, N'Birinci komando bölüğü', N'02260000101', N'AKTIF', CAST('2015-01-01' AS DATE), Ust.birim_sinif_no FROM Birim Ust WHERE Ust.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT Ust.birim_no, N'2. Komando Bölüğü', Ust.ilce_no, N'İkinci komando bölüğü', N'02260000102', N'AKTIF', CAST('2015-01-01' AS DATE), Ust.birim_sinif_no FROM Birim Ust WHERE Ust.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT Ust.birim_no, N'1. Piyade Bölüğü', Ust.ilce_no, N'Birinci piyade bölüğü', N'02260000201', N'AKTIF', CAST('2016-02-01' AS DATE), Ust.birim_sinif_no FROM Birim Ust WHERE Ust.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT Ust.birim_no, N'1. Tank Bölüğü', Ust.ilce_no, N'Birinci tank bölüğü', N'03120000101', N'AKTIF', CAST('2014-07-07' AS DATE), Ust.birim_sinif_no FROM Birim Ust WHERE Ust.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT Ust.birim_no, N'1. Bakım Bölüğü', Ust.ilce_no, N'Bakım ve ikmal bölüğü', N'02320000101', N'AKTIF', CAST('2017-08-08' AS DATE), Ust.birim_sinif_no FROM Birim Ust WHERE Ust.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO Birim (ust_birim_no, birim_adi, ilce_no, adres_aciklamasi, telefon, durum, kurulus_tarihi, birim_sinif_no) SELECT Ust.birim_no, N'1. Destek Bölüğü', Ust.ilce_no, N'Deniz destek bölüğü', N'04620000101', N'AKTIF', CAST('2018-09-09' AS DATE), Ust.birim_sinif_no FROM Birim Ust WHERE Ust.birim_adi = N'Trabzon Deniz Destek Birliği';
+GO
 
-SET @i = 1;
-WHILE @i <= 48
-BEGIN
-    DECLARE @nobet_birim_no INT = (
-        SELECT birim_no FROM (
-            SELECT birim_no, ROW_NUMBER() OVER (ORDER BY birim_no) AS rn FROM Birim
-        ) X WHERE rn = ((@i - 1) % @birim_sayisi) + 1
-    );
+-- 13. NobetYeri Tablosu
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 01', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 02', N'SILAHLI' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 03', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 04', N'SILAHLI' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 05', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 06', N'SILAHLI' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 07', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 08', N'SILAHLI' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 09', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 10', N'SILAHLI' FROM Birim WHERE birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 11', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 12', N'SILAHLI' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 13', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 14', N'SILAHLI' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 15', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 16', N'SILAHLI' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 17', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 18', N'SILAHLI' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 19', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 20', N'SILAHLI' FROM Birim WHERE birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 21', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 22', N'SILAHLI' FROM Birim WHERE birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 23', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 24', N'SILAHLI' FROM Birim WHERE birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 25', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 26', N'SILAHLI' FROM Birim WHERE birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 27', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 28', N'SILAHLI' FROM Birim WHERE birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 29', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 30', N'SILAHLI' FROM Birim WHERE birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 31', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 32', N'SILAHLI' FROM Birim WHERE birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 33', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 34', N'SILAHLI' FROM Birim WHERE birim_adi = N'1. Komando Bölüğü';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 35', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'2. Komando Bölüğü';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 36', N'SILAHLI' FROM Birim WHERE birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 37', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'1. Tank Bölüğü';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 38', N'SILAHLI' FROM Birim WHERE birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO NobetYeri (birim_no, ad, silah_durumu) SELECT birim_no, N'Nöbet Noktası 39', N'SILAHSIZ' FROM Birim WHERE birim_adi = N'1. Destek Bölüğü';
+GO
 
-    IF NOT EXISTS (SELECT 1 FROM NobetYeri WHERE ad = CONCAT(N'Nöbet Noktası ', RIGHT(CONCAT('00', @i), 2)))
-        INSERT INTO NobetYeri (birim_no, ad, silah_durumu)
-        VALUES (@nobet_birim_no, CONCAT(N'Nöbet Noktası ', RIGHT(CONCAT('00', @i), 2)), CASE WHEN @i % 2 = 0 THEN N'SILAHLI' ELSE N'SILAHSIZ' END);
+-- 14. Asker Tablosu
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'12685509245', N'Mert', N'Çelik', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'11', N'2', N'Mert Çelik - Moda Caddesi', N'05550000001', N'YAPTI', 181, 25, 1, 24, 1, CAST('2026-05-19' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'89077994623', N'Halil', N'Arslan', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'12', N'3', N'Halil Arslan - Cevdet Paşa Caddesi', N'05550000002', N'YAPTI', 182, 26, 2, 24, 2, CAST('2026-05-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'13412639613', N'Burak', N'Doğan', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'13', N'4', N'Burak Doğan - Komando Sokak', N'05550000003', N'YAPTI', 183, 27, 3, 24, 3, CAST('2026-05-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'64262110887', N'İbrahim', N'Öztürk', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'14', N'5', N'İbrahim Öztürk - Tunalı Hilmi Caddesi', N'05550000004', N'YAPTI', 184, 28, 4, 24, 4, CAST('2026-05-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654321', N'Polat', N'Alemdar', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'15', N'6', N'Polat Alemdar - Moda Caddesi', N'05550000005', N'YAPTI', 185, 29, 5, 24, 5, CAST('2026-05-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654322', N'Memati', N'Baş', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'16', N'7', N'Memati Baş - Bebek Yokuşu', N'05550000006', N'YAPMADI', 186, 30, 6, 24, 6, CAST('2026-05-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654323', N'Abdülhey', N'Çoban', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'17', N'8', N'Abdülhey Çoban - Komando Sokak', N'05550000007', N'YAPTI', 187, 31, 7, 24, 0, CAST('2026-05-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654324', N'Süleyman', N'Çakır', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'18', N'9', N'Süleyman Çakır - Liman Caddesi', N'05550000008', N'YAPTI', 188, 24, 8, 16, 1, CAST('2026-05-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654321', N'Eyüp', N'Çelik', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'19', N'10', N'Eyüp Çelik - Şair Nefi Sokak', N'05550000009', N'YAPTI', 189, 25, 9, 16, 2, CAST('2026-05-11' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654322', N'Ramiz', N'Karaeski', 'E', CAST('1990-06-15' AS DATE), 36, CS.cadde_sokak_no, N'20', N'11', N'Ramiz Karaeski - Cevdet Paşa Caddesi', N'05550000010', N'YAPTI', 190, 26, 10, 16, 3, CAST('2026-05-10' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654323', N'Cengiz', N'Atay', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'21', N'12', N'Cengiz Atay - Fatih Caddesi', N'05550000011', N'YAPTI', 191, 27, 11, 16, 4, CAST('2026-05-09' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654324', N'Ali', N'Kemal', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'22', N'13', N'Ali Kemal - Yalı Sokak', N'05550000012', N'YAPMADI', 192, 28, 0, 28, 5, CAST('2026-05-08' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654321', N'Haydar', N'Şahin', 'E', CAST('1988-06-15' AS DATE), 38, CS.cadde_sokak_no, N'23', N'14', N'Haydar Şahin - Sıfır Bir Sokak', N'05550000013', N'YAPTI', 193, 29, 1, 28, 6, CAST('2026-05-07' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654322', N'Ömer', N'Aslan', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'24', N'15', N'Ömer Aslan - Gençlik Caddesi', N'05550000014', N'YAPTI', 194, 30, 2, 28, 0, CAST('2026-05-06' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654323', N'Bayram', N'Yıldız', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'25', N'16', N'Bayram Yıldız - Dere Sokak', N'05550000015', N'YAPTI', 195, 31, 3, 28, 1, CAST('2026-05-05' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654324', N'Seyfi', N'Çakal', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'26', N'17', N'Seyfi Çakal - Gül Sokak', N'05550000016', N'YAPTI', 196, 24, 4, 20, 2, CAST('2026-05-04' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654321', N'Mert', N'Demir', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'27', N'18', N'Mert Demir - Tunalı Hilmi Caddesi', N'05550000017', N'YAPTI', 197, 25, 5, 20, 3, CAST('2026-05-03' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654322', N'Sarp', N'Yılmaz', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'28', N'19', N'Sarp Yılmaz - Bülten Sokak', N'05550000018', N'YAPMADI', 198, 26, 6, 20, 4, CAST('2026-05-02' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654323', N'Güven', N'Kaya', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'29', N'20', N'Güven Kaya - Kıbrıs Şehitleri Caddesi', N'05550000019', N'YAPTI', 199, 27, 7, 20, 5, CAST('2026-05-01' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'22334455668', N'Kaan', N'Şahin', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'30', N'21', N'Kaan Şahin - Moda Caddesi', N'05550000020', N'YAPTI', 200, 28, 8, 20, 6, CAST('2026-04-30' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654324', N'Celal', N'Karataş', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'31', N'22', N'Celal Karataş - Tıp Fakültesi Caddesi', N'05550000021', N'YAPTI', 201, 29, 9, 20, 0, CAST('2026-04-29' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654325', N'Tarık', N'Bey', 'E', CAST('1986-06-15' AS DATE), 40, CS.cadde_sokak_no, N'32', N'23', N'Tarık Bey - Şair Nefi Sokak', N'05550000022', N'YAPTI', 202, 30, 10, 20, 1, CAST('2026-04-28' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654326', N'Ömer', N'Lütfi', 'E', CAST('1988-06-15' AS DATE), 38, CS.cadde_sokak_no, N'33', N'24', N'Ömer Lütfi - Cevdet Paşa Caddesi', N'05550000023', N'YAPTI', 203, 31, 11, 20, 2, CAST('2026-04-27' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654327', N'Mahsun', N'Kara', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'34', N'1', N'Mahsun Kara - Fatih Caddesi', N'05550000024', N'YAPMADI', 204, 24, 0, 24, 3, CAST('2026-04-26' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654328', N'Ferhat', N'Polat', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'35', N'2', N'Ferhat Polat - Yalı Sokak', N'05550000025', N'YAPTI', 205, 25, 1, 24, 4, CAST('2026-04-25' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654329', N'Cevdet', N'Yılmaz', 'E', CAST('1990-06-15' AS DATE), 36, CS.cadde_sokak_no, N'36', N'3', N'Cevdet Yılmaz - Tunalı Hilmi Caddesi', N'05550000026', N'YAPTI', 206, 26, 2, 24, 5, CAST('2026-04-24' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654330', N'Muammer', N'Demir', 'E', CAST('1985-06-15' AS DATE), 41, CS.cadde_sokak_no, N'37', N'4', N'Muammer Demir - Bülten Sokak', N'05550000027', N'YAPTI', 207, 27, 3, 24, 6, CAST('2026-04-23' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654331', N'Korku', N'Arslan', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'38', N'5', N'Korku Arslan - Tıp Fakültesi Caddesi', N'05550000028', N'YAPTI', 208, 28, 4, 24, 0, CAST('2026-04-22' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654332', N'Burak', N'Şahin', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'39', N'6', N'Burak Şahin - Dere Sokak', N'05550000029', N'YAPTI', 209, 29, 5, 24, 1, CAST('2026-04-21' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654333', N'Leyla', N'Yılmaz', 'K', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'40', N'7', N'Leyla Yılmaz - Kıbrıs Şehitleri Caddesi', N'05550000030', N'YAPMADI', 210, 30, 6, 24, 2, CAST('2026-04-20' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654334', N'Şirin', N'Arslan', 'K', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'41', N'8', N'Şirin Arslan - Gül Sokak', N'05550000031', N'YAPTI', 211, 31, 7, 24, 3, CAST('2026-04-19' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654335', N'Nadia', N'Kara', 'K', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'42', N'9', N'Nadia Kara - Gençlik Caddesi', N'05550000032', N'YAPTI', 212, 24, 8, 16, 4, CAST('2026-04-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654336', N'İpek', N'Doğan', 'K', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'43', N'10', N'İpek Doğan - Çam Sokak', N'05550000033', N'YAPTI', 213, 25, 9, 16, 5, CAST('2026-04-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654337', N'Kerem', N'Yıldız', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'44', N'11', N'Kerem Yıldız - Sıfır Bir Sokak', N'05550000034', N'YAPTI', 214, 26, 10, 16, 6, CAST('2026-04-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654338', N'Zülfikar', N'Öztürk', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'45', N'12', N'Zülfikar Öztürk - Baraj Caddesi', N'05550000035', N'YAPTI', 215, 27, 11, 16, 0, CAST('2026-04-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654339', N'Hamza', N'Kılıç', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'46', N'13', N'Hamza Kılıç - Akdeniz Bulvarı', N'05550000036', N'YAPMADI', 216, 28, 0, 28, 1, CAST('2026-04-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Akdeniz Bulvarı';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10987654340', N'Sedat', N'Polat', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'47', N'14', N'Sedat Polat - Liman Sokak', N'05550000037', N'YAPTI', 217, 29, 1, 28, 2, CAST('2026-04-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Liman Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654325', N'Bahar', N'Şimşek', 'K', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'48', N'15', N'Bahar Şimşek - Liman Caddesi', N'05550000038', N'YAPTI', 218, 30, 2, 28, 3, CAST('2026-04-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654326', N'Murat', N'Yıldırım', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'49', N'16', N'Murat Yıldırım - Tunalı Hilmi Caddesi', N'05550000039', N'YAPTI', 219, 31, 3, 28, 4, CAST('2026-04-11' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'11223344556', N'Alperen', N'Demir', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'50', N'17', N'Alperen Demir - Kartal Caddesi', N'05550000040', N'YAPTI', 220, 24, 4, 20, 5, CAST('2026-04-10' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654327', N'İnci', N'Karaeski', 'K', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'51', N'18', N'İnci Karaeski - Boztepe Yokuşu', N'05550000041', N'YAPTI', 221, 25, 5, 20, 6, CAST('2026-04-09' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654328', N'Zeynel', N'Güler', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'52', N'19', N'Zeynel Güler - Gazi Caddesi', N'05550000042', N'YAPMADI', 222, 26, 6, 20, 0, CAST('2026-04-08' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Gazi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654329', N'Kaya', N'Arslan', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'53', N'20', N'Kaya Arslan - Melikahmet Sokak', N'05550000043', N'YAPTI', 223, 27, 7, 20, 1, CAST('2026-04-07' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Melikahmet Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654330', N'Nazlı', N'Yılmaz', 'K', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'54', N'21', N'Nazlı Yılmaz - Akdeniz Bulvarı', N'05550000044', N'YAPTI', 224, 28, 8, 20, 2, CAST('2026-04-06' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Akdeniz Bulvarı';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654331', N'Serdar', N'Öztürk', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'55', N'22', N'Serdar Öztürk - Liman Sokak', N'05550000045', N'YAPTI', 225, 29, 9, 20, 3, CAST('2026-04-05' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Liman Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654332', N'Ahmet', N'Kılıç', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'56', N'23', N'Ahmet Kılıç - Moda Caddesi', N'05550000046', N'YAPTI', 226, 30, 10, 20, 4, CAST('2026-04-04' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654333', N'Hüseyin', N'Bulut', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'57', N'24', N'Hüseyin Bulut - Şair Nefi Sokak', N'05550000047', N'YAPTI', 227, 31, 11, 20, 5, CAST('2026-04-03' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654334', N'Tefo', N'Karataş', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'58', N'1', N'Tefo Karataş - Komando Sokak', N'05550000048', N'YAPMADI', 228, 24, 0, 24, 6, CAST('2026-04-02' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654335', N'Aydın', N'Şahin', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'59', N'2', N'Aydın Şahin - Bebek Yokuşu', N'05550000049', N'YAPTI', 229, 25, 1, 24, 0, CAST('2026-04-01' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654336', N'Fikret', N'Doğan', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'60', N'3', N'Fikret Doğan - Dere Sokak', N'05550000050', N'YAPTI', 230, 26, 2, 24, 1, CAST('2026-03-31' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654337', N'Bülent', N'Can', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'61', N'4', N'Bülent Can - Gençlik Caddesi', N'05550000051', N'YAPTI', 231, 27, 3, 24, 2, CAST('2026-03-30' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654338', N'Selim', N'Polat', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'62', N'5', N'Selim Polat - Çam Sokak', N'05550000052', N'YAPTI', 232, 28, 4, 24, 3, CAST('2026-03-29' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654339', N'Yasemin', N'Demir', 'K', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'63', N'6', N'Yasemin Demir - Gül Sokak', N'05550000053', N'YAPTI', 233, 29, 5, 24, 4, CAST('2026-03-28' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20987654340', N'Elif', N'Yılmaz', 'K', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'64', N'7', N'Elif Yılmaz - Bülten Sokak', N'05550000054', N'YAPMADI', 234, 30, 6, 24, 5, CAST('2026-03-27' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654325', N'Harun', N'Güneş', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'65', N'8', N'Harun Güneş - Çam Sokak', N'05550000055', N'YAPTI', 235, 31, 7, 24, 6, CAST('2026-03-26' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654326', N'Sercan', N'Kaya', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'66', N'9', N'Sercan Kaya - Baraj Caddesi', N'05550000056', N'YAPTI', 236, 24, 8, 16, 0, CAST('2026-03-25' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654327', N'Zehra', N'Arslan', 'K', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'67', N'10', N'Zehra Arslan - Kartal Caddesi', N'05550000057', N'YAPTI', 237, 25, 9, 16, 1, CAST('2026-03-24' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654328', N'Karaağaç', N'Demir', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'68', N'11', N'Karaağaç Demir - Boztepe Yokuşu', N'05550000058', N'YAPTI', 238, 26, 10, 16, 2, CAST('2026-03-23' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654329', N'Mesut', N'Kılıç', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'69', N'12', N'Mesut Kılıç - Gazi Caddesi', N'05550000059', N'YAPTI', 239, 27, 11, 16, 3, CAST('2026-03-22' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Gazi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'55667788994', N'Yiğit', N'Yıldız', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'70', N'13', N'Yiğit Yıldız - Gazi Caddesi', N'05550000060', N'YAPMADI', 240, 28, 0, 28, 4, CAST('2026-03-21' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Gazi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654330', N'Kerim', N'Şimşek', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'71', N'14', N'Kerim Şimşek - Melikahmet Sokak', N'05550000061', N'YAPTI', 241, 29, 1, 28, 5, CAST('2026-03-20' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Melikahmet Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654331', N'Aslan', N'Yıldırım', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'72', N'15', N'Aslan Yıldırım - Akdeniz Bulvarı', N'05550000062', N'YAPTI', 242, 30, 2, 28, 6, CAST('2026-03-19' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Akdeniz Bulvarı';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654332', N'Güneş', N'Öztürk', 'K', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'73', N'16', N'Güneş Öztürk - Liman Sokak', N'05550000063', N'YAPTI', 243, 31, 3, 28, 0, CAST('2026-03-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Liman Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654333', N'Serap', N'Can', 'K', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'74', N'17', N'Serap Can - Moda Caddesi', N'05550000064', N'YAPTI', 244, 24, 4, 20, 1, CAST('2026-03-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654334', N'Hüseyin', N'Bulut', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'75', N'18', N'Hüseyin Bulut - Şair Nefi Sokak', N'05550000065', N'YAPTI', 245, 25, 5, 20, 2, CAST('2026-03-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654335', N'Naif', N'Kaplan', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'76', N'19', N'Naif Kaplan - Komando Sokak', N'05550000066', N'YAPMADI', 246, 26, 6, 20, 3, CAST('2026-03-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654336', N'Garip', N'Sönmez', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'77', N'20', N'Garip Sönmez - Bebek Yokuşu', N'05550000067', N'YAPTI', 247, 27, 7, 20, 4, CAST('2026-03-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654337', N'Temel', N'Yaman', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'78', N'21', N'Temel Yaman - Cevdet Paşa Caddesi', N'05550000068', N'YAPTI', 248, 28, 8, 20, 5, CAST('2026-03-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654338', N'Musa', N'Aydın', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'79', N'22', N'Musa Aydın - Fatih Caddesi', N'05550000069', N'YAPTI', 249, 29, 9, 20, 6, CAST('2026-03-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654339', N'Yıldız', N'Kaya', 'K', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'80', N'23', N'Yıldız Kaya - Liman Caddesi', N'05550000070', N'YAPTI', 250, 30, 10, 20, 0, CAST('2026-03-11' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30987654340', N'Süha', N'Özcan', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'81', N'24', N'Süha Özcan - Tıp Fakültesi Caddesi', N'05550000071', N'YAPTI', 251, 31, 11, 20, 1, CAST('2026-03-10' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654325', N'Haluk', N'Arslan', 'E', CAST('1988-06-15' AS DATE), 38, CS.cadde_sokak_no, N'82', N'1', N'Haluk Arslan - Dere Sokak', N'05550000072', N'YAPMADI', 252, 24, 0, 24, 2, CAST('2026-03-09' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654326', N'Naz', N'Şimşek', 'K', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'83', N'2', N'Naz Şimşek - Gül Sokak', N'05550000073', N'YAPTI', 253, 25, 1, 24, 3, CAST('2026-03-08' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654327', N'Berrin', N'Doğan', 'K', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'84', N'3', N'Berrin Doğan - Gençlik Caddesi', N'05550000074', N'YAPTI', 254, 26, 2, 24, 4, CAST('2026-03-07' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654328', N'Kerem', N'Öztürk', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'85', N'4', N'Kerem Öztürk - Çam Sokak', N'05550000075', N'YAPTI', 255, 27, 3, 24, 5, CAST('2026-03-06' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654329', N'Fatih', N'Şahin', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'86', N'5', N'Fatih Şahin - Sıfır Bir Sokak', N'05550000076', N'YAPTI', 256, 28, 4, 24, 6, CAST('2026-03-05' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654330', N'Safiye', N'Yıldız', 'K', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'87', N'6', N'Safiye Yıldız - Baraj Caddesi', N'05550000077', N'YAPTI', 257, 29, 5, 24, 0, CAST('2026-03-04' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654331', N'Cumali', N'Arslan', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'88', N'7', N'Cumali Arslan - Kartal Caddesi', N'05550000078', N'YAPMADI', 258, 30, 6, 24, 1, CAST('2026-03-03' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654332', N'Kadir', N'Bulut', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'89', N'8', N'Kadir Bulut - Boztepe Yokuşu', N'05550000079', N'YAPTI', 259, 31, 7, 24, 2, CAST('2026-03-02' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'33445566770', N'Bora', N'Kaya', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'90', N'9', N'Bora Kaya - Baraj Caddesi', N'05550000080', N'YAPTI', 260, 24, 8, 16, 3, CAST('2026-03-01' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654333', N'Sedef', N'Kılıç', 'K', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'91', N'10', N'Sedef Kılıç - Gazi Caddesi', N'05550000081', N'YAPTI', 261, 25, 9, 16, 4, CAST('2026-02-28' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Gazi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654334', N'Zeynep', N'Can', 'K', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'92', N'11', N'Zeynep Can - Melikahmet Sokak', N'05550000082', N'YAPTI', 262, 26, 10, 16, 5, CAST('2026-02-27' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Melikahmet Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654335', N'Berk', N'Polat', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'93', N'12', N'Berk Polat - Akdeniz Bulvarı', N'05550000083', N'YAPTI', 263, 27, 11, 16, 6, CAST('2026-02-26' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Akdeniz Bulvarı';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654336', N'Hakan', N'Demir', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'94', N'13', N'Hakan Demir - Liman Sokak', N'05550000084', N'YAPMADI', 264, 28, 0, 28, 0, CAST('2026-02-25' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Liman Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654337', N'Volkan', N'Yaman', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'95', N'14', N'Volkan Yaman - Moda Caddesi', N'05550000085', N'YAPTI', 265, 29, 1, 28, 1, CAST('2026-02-24' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654338', N'Mehmet', N'Kaplan', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'96', N'15', N'Mehmet Kaplan - Şair Nefi Sokak', N'05550000086', N'YAPTI', 266, 30, 2, 28, 2, CAST('2026-02-23' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654339', N'Serdar', N'Özcan', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'97', N'16', N'Serdar Özcan - Cevdet Paşa Caddesi', N'05550000087', N'YAPTI', 267, 31, 3, 28, 3, CAST('2026-02-22' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'40987654340', N'Can', N'Şimşek', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'98', N'17', N'Can Şimşek - Bebek Yokuşu', N'05550000088', N'YAPTI', 268, 24, 4, 20, 4, CAST('2026-02-21' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'86882020493', N'Kemal', N'Şimşek', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'99', N'18', N'Kemal Şimşek - Tunalı Hilmi Caddesi', N'05550000089', N'YAPTI', 269, 25, 5, 20, 5, CAST('2026-02-20' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'73271921145', N'Halil', N'Güler', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'100', N'19', N'Halil Güler - Bülten Sokak', N'05550000090', N'YAPMADI', 270, 26, 6, 20, 6, CAST('2026-02-19' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'27143288199', N'Emre', N'Karataş', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'101', N'20', N'Emre Karataş - Tıp Fakültesi Caddesi', N'05550000091', N'YAPTI', 271, 27, 7, 20, 0, CAST('2026-02-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'26694484437', N'Ömer', N'Aksoy', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'102', N'21', N'Ömer Aksoy - Dere Sokak', N'05550000092', N'YAPTI', 272, 28, 8, 20, 1, CAST('2026-02-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'50794383922', N'Ali', N'Kaya', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'103', N'22', N'Ali Kaya - Kıbrıs Şehitleri Caddesi', N'05550000093', N'YAPTI', 273, 29, 9, 20, 2, CAST('2026-02-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'74824588843', N'Şahin', N'Koç', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'104', N'23', N'Şahin Koç - Gül Sokak', N'05550000094', N'YAPTI', 274, 30, 10, 20, 3, CAST('2026-02-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'67577052925', N'Bilal', N'Güler', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'105', N'24', N'Bilal Güler - Gençlik Caddesi', N'05550000095', N'YAPTI', 275, 31, 11, 20, 4, CAST('2026-02-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'41479777690', N'Mustafa', N'Korkmaz', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'106', N'1', N'Mustafa Korkmaz - Çam Sokak', N'05550000096', N'YAPMADI', 276, 24, 0, 24, 5, CAST('2026-02-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'85652825218', N'Burak', N'Şimşek', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'107', N'2', N'Burak Şimşek - Sıfır Bir Sokak', N'05550000097', N'YAPTI', 277, 25, 1, 24, 6, CAST('2026-02-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'93007581047', N'Furkan', N'Öztürk', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'108', N'3', N'Furkan Öztürk - Baraj Caddesi', N'05550000098', N'YAPTI', 278, 26, 2, 24, 0, CAST('2026-02-11' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'20844946058', N'Şahin', N'Öztürk', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'109', N'4', N'Şahin Öztürk - Kartal Caddesi', N'05550000099', N'YAPTI', 279, 27, 3, 24, 1, CAST('2026-02-10' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'44556677882', N'Mete', N'Korkmaz', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'110', N'5', N'Mete Korkmaz - Boztepe Yokuşu', N'05550000100', N'YAPTI', 280, 28, 4, 24, 2, CAST('2026-02-09' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'99561925556', N'Serkan', N'Özdemir', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'111', N'6', N'Serkan Özdemir - Moda Caddesi', N'05550000101', N'YAPTI', 281, 29, 5, 24, 3, CAST('2026-02-08' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'32495645995', N'Osman', N'Koç', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'112', N'7', N'Osman Koç - Şair Nefi Sokak', N'05550000102', N'YAPMADI', 282, 30, 6, 24, 4, CAST('2026-02-07' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'83395371892', N'Fatih', N'Kartal', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'113', N'8', N'Fatih Kartal - Cevdet Paşa Caddesi', N'05550000103', N'YAPTI', 283, 31, 7, 24, 5, CAST('2026-02-06' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'28375872078', N'Eren', N'Özdemir', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'114', N'9', N'Eren Özdemir - Bebek Yokuşu', N'05550000104', N'YAPTI', 284, 24, 8, 16, 6, CAST('2026-02-05' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'50743718144', N'Hasan', N'Güler', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'115', N'10', N'Hasan Güler - Komando Sokak', N'05550000105', N'YAPTI', 285, 25, 9, 16, 0, CAST('2026-02-04' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'92497041917', N'Furkan', N'Yalçın', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'116', N'11', N'Furkan Yalçın - Fatih Caddesi', N'05550000106', N'YAPTI', 286, 26, 10, 16, 1, CAST('2026-02-03' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'96441134750', N'Volkan', N'Demir', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'117', N'12', N'Volkan Demir - Liman Caddesi', N'05550000107', N'YAPTI', 287, 27, 11, 16, 2, CAST('2026-02-02' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'32654109982', N'Süleyman', N'Kaya', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'118', N'13', N'Süleyman Kaya - Yalı Sokak', N'05550000108', N'YAPMADI', 288, 28, 0, 28, 3, CAST('2026-02-01' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'63604548460', N'İbrahim', N'Özdemir', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'119', N'14', N'İbrahim Özdemir - Tunalı Hilmi Caddesi', N'05550000109', N'YAPTI', 289, 29, 1, 28, 4, CAST('2026-01-31' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'24992691941', N'Hüseyin', N'Aksoy', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'120', N'15', N'Hüseyin Aksoy - Bülten Sokak', N'05550000110', N'YAPTI', 290, 30, 2, 28, 5, CAST('2026-01-30' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'56002731384', N'Bilal', N'Erdoğan', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'121', N'16', N'Bilal Erdoğan - Tıp Fakültesi Caddesi', N'05550000111', N'YAPTI', 291, 31, 3, 28, 6, CAST('2026-01-29' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'24853257775', N'Osman', N'Öztürk', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'122', N'17', N'Osman Öztürk - Dere Sokak', N'05550000112', N'YAPTI', 292, 24, 4, 20, 0, CAST('2026-01-28' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'15059082124', N'Mustafa', N'Yavuz', 'E', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'123', N'18', N'Mustafa Yavuz - Kıbrıs Şehitleri Caddesi', N'05550000113', N'YAPTI', 293, 25, 5, 20, 1, CAST('2026-01-27' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'95048873997', N'Mert', N'Yıldırım', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'124', N'19', N'Mert Yıldırım - Gül Sokak', N'05550000114', N'YAPMADI', 294, 26, 6, 20, 2, CAST('2026-01-26' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'51314075358', N'Eren', N'Kaya', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'125', N'20', N'Eren Kaya - Gençlik Caddesi', N'05550000115', N'YAPTI', 295, 27, 7, 20, 3, CAST('2026-01-25' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'69402178211', N'Gökhan', N'Aksoy', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'126', N'21', N'Gökhan Aksoy - Çam Sokak', N'05550000116', N'YAPTI', 296, 28, 8, 20, 4, CAST('2026-01-24' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'67656750144', N'Furkan', N'Köse', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'127', N'22', N'Furkan Köse - Sıfır Bir Sokak', N'05550000117', N'YAPTI', 297, 29, 9, 20, 5, CAST('2026-01-23' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'56682563830', N'Ali', N'Tekin', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'128', N'23', N'Ali Tekin - Baraj Caddesi', N'05550000118', N'YAPTI', 298, 30, 10, 20, 6, CAST('2026-01-22' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'87275123443', N'Ahmet', N'Bulut', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'129', N'24', N'Ahmet Bulut - Kartal Caddesi', N'05550000119', N'YAPTI', 299, 31, 11, 20, 0, CAST('2026-01-21' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'21425775190', N'Gökhan', N'Kartal', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'130', N'1', N'Gökhan Kartal - Boztepe Yokuşu', N'05550000120', N'YAPMADI', 300, 24, 0, 24, 1, CAST('2026-01-20' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'64509886987', N'Volkan', N'Özdemir', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'131', N'2', N'Volkan Özdemir - Moda Caddesi', N'05550000121', N'YAPTI', 301, 25, 1, 24, 2, CAST('2026-01-19' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'91873973630', N'Hüseyin', N'Koç', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'132', N'3', N'Hüseyin Koç - Şair Nefi Sokak', N'05550000122', N'YAPTI', 302, 26, 2, 24, 3, CAST('2026-01-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'62463638512', N'Eren', N'Yalçın', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'133', N'4', N'Eren Yalçın - Cevdet Paşa Caddesi', N'05550000123', N'YAPTI', 303, 27, 3, 24, 4, CAST('2026-01-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'99299406249', N'Alper', N'Koç', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'134', N'5', N'Alper Koç - Bebek Yokuşu', N'05550000124', N'YAPTI', 304, 28, 4, 24, 5, CAST('2026-01-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'70919487220', N'Mehmet', N'Öztürk', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'135', N'6', N'Mehmet Öztürk - Komando Sokak', N'05550000125', N'YAPTI', 305, 29, 5, 24, 6, CAST('2026-01-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'97619829618', N'Bilal', N'Avcı', 'E', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'136', N'7', N'Bilal Avcı - Fatih Caddesi', N'05550000126', N'YAPMADI', 306, 30, 6, 24, 0, CAST('2026-01-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'61033056780', N'Hüseyin', N'Aslan', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'137', N'8', N'Hüseyin Aslan - Liman Caddesi', N'05550000127', N'YAPTI', 307, 31, 7, 24, 1, CAST('2026-01-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'75132525764', N'Süleyman', N'Yıldız', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'138', N'9', N'Süleyman Yıldız - Yalı Sokak', N'05550000128', N'YAPTI', 308, 24, 8, 16, 2, CAST('2026-01-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'91095982898', N'Alper', N'Korkmaz', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'139', N'10', N'Alper Korkmaz - Tunalı Hilmi Caddesi', N'05550000129', N'YAPTI', 309, 25, 9, 16, 3, CAST('2026-01-11' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'52841471895', N'Fatih', N'Tekin', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'140', N'11', N'Fatih Tekin - Bülten Sokak', N'05550000130', N'YAPTI', 310, 26, 10, 16, 4, CAST('2026-01-10' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'65574282967', N'Serkan', N'Köse', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'141', N'12', N'Serkan Köse - Tıp Fakültesi Caddesi', N'05550000131', N'YAPTI', 311, 27, 11, 16, 5, CAST('2026-01-09' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'16874728753', N'Halil', N'Öztürk', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'142', N'13', N'Halil Öztürk - Dere Sokak', N'05550000132', N'YAPMADI', 312, 28, 0, 28, 6, CAST('2026-01-08' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'34708381285', N'Burak', N'Korkmaz', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'143', N'14', N'Burak Korkmaz - Kıbrıs Şehitleri Caddesi', N'05550000133', N'YAPTI', 313, 29, 1, 28, 0, CAST('2026-01-07' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'86003842790', N'Ahmet', N'Kaya', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'144', N'15', N'Ahmet Kaya - Gül Sokak', N'05550000134', N'YAPTI', 314, 30, 2, 28, 1, CAST('2026-01-06' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'13372940652', N'Halil', N'Kaya', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'145', N'16', N'Halil Kaya - Gençlik Caddesi', N'05550000135', N'YAPTI', 315, 31, 3, 28, 2, CAST('2026-01-05' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'39901268695', N'Gökhan', N'Öztürk', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'146', N'17', N'Gökhan Öztürk - Çam Sokak', N'05550000136', N'YAPTI', 316, 24, 4, 20, 3, CAST('2026-01-04' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'24206876383', N'İbrahim', N'Korkmaz', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'147', N'18', N'İbrahim Korkmaz - Sıfır Bir Sokak', N'05550000137', N'YAPTI', 317, 25, 5, 20, 4, CAST('2026-01-03' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'60785082462', N'Halil', N'Karataş', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'148', N'19', N'Halil Karataş - Baraj Caddesi', N'05550000138', N'YAPMADI', 318, 26, 6, 20, 5, CAST('2026-01-02' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'80757734265', N'Ali', N'Çelik', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'149', N'20', N'Ali Çelik - Kartal Caddesi', N'05550000139', N'YAPTI', 319, 27, 7, 20, 6, CAST('2026-01-01' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'60146391616', N'Hakan', N'Doğan', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'150', N'21', N'Hakan Doğan - Boztepe Yokuşu', N'05550000140', N'YAPTI', 320, 28, 8, 20, 0, CAST('2025-12-31' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'88191338653', N'Mehmet', N'Şahin', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'151', N'22', N'Mehmet Şahin - Moda Caddesi', N'05550000141', N'YAPTI', 321, 29, 9, 20, 1, CAST('2025-12-30' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'30423525978', N'Halil', N'Şimşek', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'152', N'23', N'Halil Şimşek - Şair Nefi Sokak', N'05550000142', N'YAPTI', 322, 30, 10, 20, 2, CAST('2025-12-29' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'29701878145', N'Hüseyin', N'Doğan', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'153', N'24', N'Hüseyin Doğan - Cevdet Paşa Caddesi', N'05550000143', N'YAPTI', 323, 31, 11, 20, 3, CAST('2025-12-28' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'18094390866', N'Halil', N'Duman', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'154', N'1', N'Halil Duman - Bebek Yokuşu', N'05550000144', N'YAPMADI', 324, 24, 0, 24, 4, CAST('2025-12-27' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'68045187211', N'Mehmet', N'Özdemir', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'155', N'2', N'Mehmet Özdemir - Komando Sokak', N'05550000145', N'YAPTI', 325, 25, 1, 24, 5, CAST('2025-12-26' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'35381054431', N'Alper', N'Yavuz', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'156', N'3', N'Alper Yavuz - Fatih Caddesi', N'05550000146', N'YAPTI', 326, 26, 2, 24, 6, CAST('2025-12-25' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'32950940861', N'Can', N'Avcı', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'157', N'4', N'Can Avcı - Liman Caddesi', N'05550000147', N'YAPTI', 327, 27, 3, 24, 0, CAST('2025-12-24' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'10231431359', N'Hasan', N'Şahin', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'158', N'5', N'Hasan Şahin - Yalı Sokak', N'05550000148', N'YAPTI', 328, 28, 4, 24, 1, CAST('2025-12-23' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'94302622768', N'Alper', N'Karataş', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'159', N'6', N'Alper Karataş - Tunalı Hilmi Caddesi', N'05550000149', N'YAPTI', 329, 29, 5, 24, 2, CAST('2025-12-22' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'88437410981', N'Hakan', N'Kılıç', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'160', N'7', N'Hakan Kılıç - Bülten Sokak', N'05550000150', N'YAPMADI', 330, 30, 6, 24, 3, CAST('2025-12-21' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'41858760437', N'Hüseyin', N'Şimşek', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'161', N'8', N'Hüseyin Şimşek - Tıp Fakültesi Caddesi', N'05550000151', N'YAPTI', 331, 31, 7, 24, 4, CAST('2025-12-20' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'68217766817', N'Burak', N'Bulut', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'162', N'9', N'Burak Bulut - Dere Sokak', N'05550000152', N'YAPTI', 332, 24, 8, 16, 5, CAST('2025-12-19' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'72725591871', N'Mehmet', N'Demir', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'163', N'10', N'Mehmet Demir - Kıbrıs Şehitleri Caddesi', N'05550000153', N'YAPTI', 333, 25, 9, 16, 6, CAST('2025-12-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'18601902833', N'Mehmet', N'Yıldız', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'164', N'11', N'Mehmet Yıldız - Gül Sokak', N'05550000154', N'YAPTI', 334, 26, 10, 16, 0, CAST('2025-12-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'82500395540', N'Eren', N'Kaya', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'165', N'12', N'Eren Kaya - Gençlik Caddesi', N'05550000155', N'YAPTI', 335, 27, 11, 16, 1, CAST('2025-12-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'71168431841', N'Ali', N'Köse', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'166', N'13', N'Ali Köse - Çam Sokak', N'05550000156', N'YAPMADI', 336, 28, 0, 28, 2, CAST('2025-12-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'55013932094', N'Eren', N'Kaya', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'167', N'14', N'Eren Kaya - Sıfır Bir Sokak', N'05550000157', N'YAPTI', 337, 29, 1, 28, 3, CAST('2025-12-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'31932164695', N'Alper', N'Aksoy', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'168', N'15', N'Alper Aksoy - Baraj Caddesi', N'05550000158', N'YAPTI', 338, 30, 2, 28, 4, CAST('2025-12-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'52497181726', N'Halil', N'Aksoy', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'169', N'16', N'Halil Aksoy - Kartal Caddesi', N'05550000159', N'YAPTI', 339, 31, 3, 28, 5, CAST('2025-12-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'90730834819', N'Serkan', N'Yalçın', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'170', N'17', N'Serkan Yalçın - Boztepe Yokuşu', N'05550000160', N'YAPTI', 340, 24, 4, 20, 6, CAST('2025-12-11' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'70450981722', N'Serkan', N'Polat', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'171', N'18', N'Serkan Polat - Moda Caddesi', N'05550000161', N'YAPTI', 341, 25, 5, 20, 0, CAST('2025-12-10' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'64318955543', N'Kemal', N'Şimşek', 'E', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'172', N'19', N'Kemal Şimşek - Şair Nefi Sokak', N'05550000162', N'YAPMADI', 342, 26, 6, 20, 1, CAST('2025-12-09' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'17386410441', N'Alper', N'Koç', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'173', N'20', N'Alper Koç - Cevdet Paşa Caddesi', N'05550000163', N'YAPTI', 343, 27, 7, 20, 2, CAST('2025-12-08' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'57049709679', N'Yusuf', N'Yıldırım', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'174', N'21', N'Yusuf Yıldırım - Bebek Yokuşu', N'05550000164', N'YAPTI', 344, 28, 8, 20, 3, CAST('2025-12-07' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'80220172177', N'Eren', N'Karataş', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'175', N'22', N'Eren Karataş - Komando Sokak', N'05550000165', N'YAPTI', 345, 29, 9, 20, 4, CAST('2025-12-06' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'69549966948', N'Furkan', N'Can', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'176', N'23', N'Furkan Can - Fatih Caddesi', N'05550000166', N'YAPTI', 346, 30, 10, 20, 5, CAST('2025-12-05' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'38396812324', N'Yavuz', N'Arslan', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'177', N'24', N'Yavuz Arslan - Liman Caddesi', N'05550000167', N'YAPTI', 347, 31, 11, 20, 6, CAST('2025-12-04' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'26691092244', N'Bilal', N'Korkmaz', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'178', N'1', N'Bilal Korkmaz - Yalı Sokak', N'05550000168', N'YAPMADI', 348, 24, 0, 24, 0, CAST('2025-12-03' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'87053021753', N'Eren', N'Şimşek', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'179', N'2', N'Eren Şimşek - Tunalı Hilmi Caddesi', N'05550000169', N'YAPTI', 349, 25, 1, 24, 1, CAST('2025-12-02' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'38345055374', N'Furkan', N'Özdemir', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'180', N'3', N'Furkan Özdemir - Bülten Sokak', N'05550000170', N'YAPTI', 350, 26, 2, 24, 2, CAST('2025-12-01' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'15454489921', N'Süleyman', N'Köse', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'181', N'4', N'Süleyman Köse - Tıp Fakültesi Caddesi', N'05550000171', N'YAPTI', 351, 27, 3, 24, 3, CAST('2025-11-30' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'14733780310', N'Volkan', N'Aksoy', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'182', N'5', N'Volkan Aksoy - Dere Sokak', N'05550000172', N'YAPTI', 352, 28, 4, 24, 4, CAST('2025-11-29' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'78409527743', N'Emre', N'Arslan', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'183', N'6', N'Emre Arslan - Kıbrıs Şehitleri Caddesi', N'05550000173', N'YAPTI', 353, 29, 5, 24, 5, CAST('2025-11-28' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'69236234264', N'Bilal', N'Güler', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'184', N'7', N'Bilal Güler - Gül Sokak', N'05550000174', N'YAPMADI', 354, 30, 6, 24, 6, CAST('2025-11-27' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'84197666629', N'Ali', N'Kaya', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'185', N'8', N'Ali Kaya - Gençlik Caddesi', N'05550000175', N'YAPTI', 355, 31, 7, 24, 0, CAST('2025-11-26' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'72546488480', N'Volkan', N'Koç', 'E', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'186', N'9', N'Volkan Koç - Çam Sokak', N'05550000176', N'YAPTI', 356, 24, 8, 16, 1, CAST('2025-11-25' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'14491339949', N'Hakan', N'Arslan', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'187', N'10', N'Hakan Arslan - Sıfır Bir Sokak', N'05550000177', N'YAPTI', 357, 25, 9, 16, 2, CAST('2025-11-24' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'95482981515', N'Yavuz', N'Kartal', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'188', N'11', N'Yavuz Kartal - Baraj Caddesi', N'05550000178', N'YAPTI', 358, 26, 10, 16, 3, CAST('2025-11-23' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'36793051395', N'İbrahim', N'Aslan', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'189', N'12', N'İbrahim Aslan - Kartal Caddesi', N'05550000179', N'YAPTI', 359, 27, 11, 16, 4, CAST('2025-11-22' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'70117034962', N'Osman', N'Yavuz', 'E', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'190', N'13', N'Osman Yavuz - Boztepe Yokuşu', N'05550000180', N'YAPMADI', 360, 28, 0, 28, 5, CAST('2025-11-21' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'35419477130', N'Alper', N'Kartal', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'191', N'14', N'Alper Kartal - Moda Caddesi', N'05550000181', N'YAPTI', 180, 29, 1, 28, 6, CAST('2025-11-20' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'12661415832', N'Yavuz', N'Doğan', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'192', N'15', N'Yavuz Doğan - Şair Nefi Sokak', N'05550000182', N'YAPTI', 181, 30, 2, 28, 0, CAST('2025-11-19' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'54207364295', N'Tolga', N'Kartal', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'193', N'16', N'Tolga Kartal - Cevdet Paşa Caddesi', N'05550000183', N'YAPTI', 182, 31, 3, 28, 1, CAST('2025-11-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'94543694399', N'Süleyman', N'Yıldırım', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'194', N'17', N'Süleyman Yıldırım - Bebek Yokuşu', N'05550000184', N'YAPTI', 183, 24, 4, 20, 2, CAST('2025-11-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'14158022670', N'Murat', N'Duman', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'195', N'18', N'Murat Duman - Komando Sokak', N'05550000185', N'YAPTI', 184, 25, 5, 20, 3, CAST('2025-11-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'59424683754', N'İbrahim', N'Can', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'196', N'19', N'İbrahim Can - Fatih Caddesi', N'05550000186', N'YAPMADI', 185, 26, 6, 20, 4, CAST('2025-11-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'34437879838', N'Volkan', N'Karataş', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'197', N'20', N'Volkan Karataş - Liman Caddesi', N'05550000187', N'YAPTI', 186, 27, 7, 20, 5, CAST('2025-11-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'52784958852', N'Furkan', N'Şimşek', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'198', N'21', N'Furkan Şimşek - Yalı Sokak', N'05550000188', N'YAPTI', 187, 28, 8, 20, 6, CAST('2025-11-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'93035315745', N'Şahin', N'Kaya', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'199', N'22', N'Şahin Kaya - Tunalı Hilmi Caddesi', N'05550000189', N'YAPTI', 188, 29, 9, 20, 0, CAST('2025-11-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'52915139996', N'Mert', N'Yıldız', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'200', N'23', N'Mert Yıldız - Bülten Sokak', N'05550000190', N'YAPTI', 189, 30, 10, 20, 1, CAST('2025-11-11' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'38047768332', N'Ahmet', N'Çelik', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'201', N'24', N'Ahmet Çelik - Tıp Fakültesi Caddesi', N'05550000191', N'YAPTI', 190, 31, 11, 20, 2, CAST('2025-11-10' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'74056350765', N'Mehmet', N'Çelik', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'202', N'1', N'Mehmet Çelik - Dere Sokak', N'05550000192', N'YAPMADI', 191, 24, 0, 24, 3, CAST('2025-11-09' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'43680845565', N'Bilal', N'Karataş', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'203', N'2', N'Bilal Karataş - Kıbrıs Şehitleri Caddesi', N'05550000193', N'YAPTI', 192, 25, 1, 24, 4, CAST('2025-11-08' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'71910669934', N'Murat', N'Köse', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'204', N'3', N'Murat Köse - Gül Sokak', N'05550000194', N'YAPTI', 193, 26, 2, 24, 5, CAST('2025-11-07' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'56821319710', N'Mehmet', N'Kılıç', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'205', N'4', N'Mehmet Kılıç - Gençlik Caddesi', N'05550000195', N'YAPTI', 194, 27, 3, 24, 6, CAST('2025-11-06' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'17513380295', N'Osman', N'Doğan', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'206', N'5', N'Osman Doğan - Çam Sokak', N'05550000196', N'YAPTI', 195, 28, 4, 24, 0, CAST('2025-11-05' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'81230687325', N'Eren', N'Yalçın', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'207', N'6', N'Eren Yalçın - Sıfır Bir Sokak', N'05550000197', N'YAPTI', 196, 29, 5, 24, 1, CAST('2025-11-04' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'81607080262', N'Gökhan', N'Tekin', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'208', N'7', N'Gökhan Tekin - Baraj Caddesi', N'05550000198', N'YAPMADI', 197, 30, 6, 24, 2, CAST('2025-11-03' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'41745735280', N'Murat', N'Kılıç', 'E', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'209', N'8', N'Murat Kılıç - Kartal Caddesi', N'05550000199', N'YAPTI', 198, 31, 7, 24, 3, CAST('2025-11-02' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'81396253658', N'İbrahim', N'Doğan', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'210', N'9', N'İbrahim Doğan - Boztepe Yokuşu', N'05550000200', N'YAPTI', 199, 24, 8, 16, 4, CAST('2025-11-01' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'42314247061', N'Eren', N'Erdoğan', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'211', N'10', N'Eren Erdoğan - Moda Caddesi', N'05550000201', N'YAPTI', 200, 25, 9, 16, 5, CAST('2025-10-31' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'32568193665', N'Yusuf', N'Tekin', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'212', N'11', N'Yusuf Tekin - Şair Nefi Sokak', N'05550000202', N'YAPTI', 201, 26, 10, 16, 6, CAST('2025-10-30' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'57476546696', N'Serkan', N'Güler', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'213', N'12', N'Serkan Güler - Cevdet Paşa Caddesi', N'05550000203', N'YAPTI', 202, 27, 11, 16, 0, CAST('2025-10-29' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'95226689331', N'Gökhan', N'Avcı', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'214', N'13', N'Gökhan Avcı - Bebek Yokuşu', N'05550000204', N'YAPMADI', 203, 28, 0, 28, 1, CAST('2025-10-28' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'81280762991', N'Yusuf', N'Yıldız', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'215', N'14', N'Yusuf Yıldız - Komando Sokak', N'05550000205', N'YAPTI', 204, 29, 1, 28, 2, CAST('2025-10-27' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'90652843340', N'Mustafa', N'Can', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'216', N'15', N'Mustafa Can - Fatih Caddesi', N'05550000206', N'YAPTI', 205, 30, 2, 28, 3, CAST('2025-10-26' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'31381413828', N'Halil', N'Karataş', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'217', N'16', N'Halil Karataş - Liman Caddesi', N'05550000207', N'YAPTI', 206, 31, 3, 28, 4, CAST('2025-10-25' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'61017376088', N'Mehmet', N'Öztürk', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'218', N'17', N'Mehmet Öztürk - Yalı Sokak', N'05550000208', N'YAPTI', 207, 24, 4, 20, 5, CAST('2025-10-24' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'77620543183', N'Serkan', N'Doğan', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'219', N'18', N'Serkan Doğan - Tunalı Hilmi Caddesi', N'05550000209', N'YAPTI', 208, 25, 5, 20, 6, CAST('2025-10-23' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'51229374173', N'Fatih', N'Kılıç', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'220', N'19', N'Fatih Kılıç - Bülten Sokak', N'05550000210', N'YAPMADI', 209, 26, 6, 20, 0, CAST('2025-10-22' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'80443692298', N'Halil', N'Arslan', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'221', N'20', N'Halil Arslan - Tıp Fakültesi Caddesi', N'05550000211', N'YAPTI', 210, 27, 7, 20, 1, CAST('2025-10-21' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'92683079523', N'Yavuz', N'Yavuz', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'222', N'21', N'Yavuz Yavuz - Dere Sokak', N'05550000212', N'YAPTI', 211, 28, 8, 20, 2, CAST('2025-10-20' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'96340638299', N'Halil', N'Yıldırım', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'223', N'22', N'Halil Yıldırım - Kıbrıs Şehitleri Caddesi', N'05550000213', N'YAPTI', 212, 29, 9, 20, 3, CAST('2025-10-19' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'36757460925', N'Mehmet', N'Korkmaz', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'224', N'23', N'Mehmet Korkmaz - Gül Sokak', N'05550000214', N'YAPTI', 213, 30, 10, 20, 4, CAST('2025-10-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'59890687995', N'Hüseyin', N'Karataş', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'225', N'24', N'Hüseyin Karataş - Gençlik Caddesi', N'05550000215', N'YAPTI', 214, 31, 11, 20, 5, CAST('2025-10-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'57520959788', N'Emre', N'Köse', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'226', N'1', N'Emre Köse - Çam Sokak', N'05550000216', N'YAPMADI', 215, 24, 0, 24, 6, CAST('2025-10-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'68827303067', N'Volkan', N'Kartal', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'227', N'2', N'Volkan Kartal - Sıfır Bir Sokak', N'05550000217', N'YAPTI', 216, 25, 1, 24, 0, CAST('2025-10-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'60967779467', N'Bilal', N'Duman', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'228', N'3', N'Bilal Duman - Baraj Caddesi', N'05550000218', N'YAPTI', 217, 26, 2, 24, 1, CAST('2025-10-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'78468375545', N'Emre', N'Öztürk', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'229', N'4', N'Emre Öztürk - Kartal Caddesi', N'05550000219', N'YAPTI', 218, 27, 3, 24, 2, CAST('2025-10-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'39484676366', N'Mert', N'Öztürk', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'230', N'5', N'Mert Öztürk - Boztepe Yokuşu', N'05550000220', N'YAPTI', 219, 28, 4, 24, 3, CAST('2025-10-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'35178556544', N'Fatih', N'Tekin', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'231', N'6', N'Fatih Tekin - Moda Caddesi', N'05550000221', N'YAPTI', 220, 29, 5, 24, 4, CAST('2025-10-11' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'67998403320', N'Ömer', N'Köse', 'E', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'232', N'7', N'Ömer Köse - Şair Nefi Sokak', N'05550000222', N'YAPMADI', 221, 30, 6, 24, 5, CAST('2025-10-10' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'51128101298', N'Hüseyin', N'Öztürk', 'E', CAST('2002-06-15' AS DATE), 24, CS.cadde_sokak_no, N'233', N'8', N'Hüseyin Öztürk - Cevdet Paşa Caddesi', N'05550000223', N'YAPTI', 222, 31, 7, 24, 6, CAST('2025-10-09' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'16896520463', N'Fatih', N'Şimşek', 'E', CAST('1993-06-15' AS DATE), 33, CS.cadde_sokak_no, N'234', N'9', N'Fatih Şimşek - Bebek Yokuşu', N'05550000224', N'YAPTI', 223, 24, 8, 16, 0, CAST('2025-10-08' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'60028241463', N'Ömer', N'Korkmaz', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'235', N'10', N'Ömer Korkmaz - Komando Sokak', N'05550000225', N'YAPTI', 224, 25, 9, 16, 1, CAST('2025-10-07' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'55112567159', N'İbrahim', N'Can', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'236', N'11', N'İbrahim Can - Fatih Caddesi', N'05550000226', N'YAPTI', 225, 26, 10, 16, 2, CAST('2025-10-06' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'92205091283', N'Şahin', N'Köse', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'237', N'12', N'Şahin Köse - Liman Caddesi', N'05550000227', N'YAPTI', 226, 27, 11, 16, 3, CAST('2025-10-05' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'47769814348', N'Can', N'Yılmaz', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'238', N'13', N'Can Yılmaz - Yalı Sokak', N'05550000228', N'YAPMADI', 227, 28, 0, 28, 4, CAST('2025-10-04' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'99735682863', N'Şahin', N'Köse', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'239', N'14', N'Şahin Köse - Tunalı Hilmi Caddesi', N'05550000229', N'YAPTI', 228, 29, 1, 28, 5, CAST('2025-10-03' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'39306206165', N'Can', N'Öztürk', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'240', N'15', N'Can Öztürk - Bülten Sokak', N'05550000230', N'YAPTI', 229, 30, 2, 28, 6, CAST('2025-10-02' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'46091634795', N'Ahmet', N'Şahin', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'241', N'16', N'Ahmet Şahin - Tıp Fakültesi Caddesi', N'05550000231', N'YAPTI', 230, 31, 3, 28, 0, CAST('2025-10-01' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Tıp Fakültesi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'60185635126', N'Bilal', N'Yıldırım', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'242', N'17', N'Bilal Yıldırım - Dere Sokak', N'05550000232', N'YAPTI', 231, 24, 4, 20, 1, CAST('2025-09-30' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Dere Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'73554003082', N'Alper', N'Şahin', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'243', N'18', N'Alper Şahin - Kıbrıs Şehitleri Caddesi', N'05550000233', N'YAPTI', 232, 25, 5, 20, 2, CAST('2025-09-29' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Kıbrıs Şehitleri Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'56021945627', N'Mustafa', N'Özdemir', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'244', N'19', N'Mustafa Özdemir - Gül Sokak', N'05550000234', N'YAPMADI', 233, 26, 6, 20, 3, CAST('2025-09-28' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Gül Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'37934071358', N'Hasan', N'Demir', 'E', CAST('1996-06-15' AS DATE), 30, CS.cadde_sokak_no, N'245', N'20', N'Hasan Demir - Gençlik Caddesi', N'05550000235', N'YAPTI', 234, 27, 7, 20, 4, CAST('2025-09-27' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Gençlik Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'45094801453', N'İbrahim', N'Güler', 'E', CAST('1994-06-15' AS DATE), 32, CS.cadde_sokak_no, N'246', N'21', N'İbrahim Güler - Çam Sokak', N'05550000236', N'YAPTI', 235, 28, 8, 20, 5, CAST('2025-09-26' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Çam Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'99327190063', N'Süleyman', N'Yavuz', 'E', CAST('1998-06-15' AS DATE), 28, CS.cadde_sokak_no, N'247', N'22', N'Süleyman Yavuz - Sıfır Bir Sokak', N'05550000237', N'YAPTI', 236, 29, 9, 20, 6, CAST('2025-09-25' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Sıfır Bir Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'60498812112', N'Volkan', N'Kaya', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'248', N'23', N'Volkan Kaya - Baraj Caddesi', N'05550000238', N'YAPTI', 237, 30, 10, 20, 0, CAST('2025-09-24' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Baraj Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'79808690918', N'Osman', N'Öztürk', 'E', CAST('2005-06-15' AS DATE), 21, CS.cadde_sokak_no, N'249', N'24', N'Osman Öztürk - Kartal Caddesi', N'05550000239', N'YAPTI', 238, 31, 11, 20, 1, CAST('2025-09-23' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Kartal Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'36551842435', N'Emre', N'Yılmaz', 'E', CAST('2006-06-15' AS DATE), 20, CS.cadde_sokak_no, N'250', N'1', N'Emre Yılmaz - Boztepe Yokuşu', N'05550000240', N'YAPMADI', 239, 24, 0, 24, 2, CAST('2025-09-22' AS DATE), R.rutbe_no, N'BITIRDI' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Boztepe Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'35613568026', N'Eren', N'Arslan', 'E', CAST('1991-06-15' AS DATE), 35, CS.cadde_sokak_no, N'251', N'2', N'Eren Arslan - Moda Caddesi', N'05550000241', N'YAPTI', 240, 25, 1, 24, 3, CAST('2025-09-21' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Moda Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'70555772037', N'Furkan', N'Çelik', 'E', CAST('1992-06-15' AS DATE), 34, CS.cadde_sokak_no, N'252', N'3', N'Furkan Çelik - Şair Nefi Sokak', N'05550000242', N'YAPTI', 241, 26, 2, 24, 4, CAST('2025-09-20' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Şair Nefi Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'92345056757', N'Fatih', N'Aksoy', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'253', N'4', N'Fatih Aksoy - Cevdet Paşa Caddesi', N'05550000243', N'YAPTI', 242, 27, 3, 24, 5, CAST('2025-09-19' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Cevdet Paşa Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'90307905524', N'Eren', N'Polat', 'E', CAST('2001-06-15' AS DATE), 25, CS.cadde_sokak_no, N'254', N'5', N'Eren Polat - Bebek Yokuşu', N'05550000244', N'YAPTI', 243, 28, 4, 24, 6, CAST('2025-09-18' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Bebek Yokuşu';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'72135800513', N'Yusuf', N'Çelik', 'E', CAST('1997-06-15' AS DATE), 29, CS.cadde_sokak_no, N'255', N'6', N'Yusuf Çelik - Komando Sokak', N'05550000245', N'YAPTI', 244, 29, 5, 24, 0, CAST('2025-09-17' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Komando Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'50298277860', N'Burak', N'Aslan', 'E', CAST('2000-06-15' AS DATE), 26, CS.cadde_sokak_no, N'256', N'7', N'Burak Aslan - Fatih Caddesi', N'05550000246', N'YAPMADI', 245, 30, 6, 24, 1, CAST('2025-09-16' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Er' WHERE CS.cadde_sokak_adi = N'Fatih Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'84154158290', N'Mustafa', N'Erdoğan', 'E', CAST('1999-06-15' AS DATE), 27, CS.cadde_sokak_no, N'257', N'8', N'Mustafa Erdoğan - Liman Caddesi', N'05550000247', N'YAPTI', 246, 31, 7, 24, 2, CAST('2025-09-15' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Onbaşı' WHERE CS.cadde_sokak_adi = N'Liman Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'92944503748', N'Ali', N'Kılıç', 'E', CAST('2003-06-15' AS DATE), 23, CS.cadde_sokak_no, N'258', N'9', N'Ali Kılıç - Yalı Sokak', N'05550000248', N'YAPTI', 247, 24, 8, 16, 3, CAST('2025-09-14' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Çavuş' WHERE CS.cadde_sokak_adi = N'Yalı Sokak';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'94034830515', N'Tolga', N'Erdoğan', 'E', CAST('1995-06-15' AS DATE), 31, CS.cadde_sokak_no, N'259', N'10', N'Tolga Erdoğan - Tunalı Hilmi Caddesi', N'05550000249', N'YAPTI', 248, 25, 9, 16, 4, CAST('2025-09-13' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Uzman Çavuş' WHERE CS.cadde_sokak_adi = N'Tunalı Hilmi Caddesi';
+INSERT INTO Asker (tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no, dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu, askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun, kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum) SELECT N'81030312857', N'Kemal', N'Doğan', 'E', CAST('2004-06-15' AS DATE), 22, CS.cadde_sokak_no, N'260', N'11', N'Kemal Doğan - Bülten Sokak', N'05550000250', N'YAPTI', 249, 26, 10, 16, 5, CAST('2025-09-12' AS DATE), R.rutbe_no, N'DEVAM_EDIYOR' FROM CaddeSokak CS INNER JOIN Rutbe R ON R.rutbe_adi = N'Asteğmen' WHERE CS.cadde_sokak_adi = N'Bülten Sokak';
+GO
 
-    SET @i = @i + 1;
-END
+-- 15. GorevYapar Tablosu
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 1 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 2 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 3 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 4 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+-- Dizi Karakteri 5 (Polat)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654321' AND B.birim_adi = N'Adana Lojistik Birliği';
+-- Dizi Karakteri 6 (Memati)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654322' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+-- Dizi Karakteri 7 (Abdülhey)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654323' AND B.birim_adi = N'1. Komando Bölüğü';
+-- Dizi Karakteri 8 (Süleyman)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654324' AND B.birim_adi = N'2. Komando Bölüğü';
+-- Dizi Karakteri 9 (Eyüp)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654321' AND B.birim_adi = N'1. Piyade Bölüğü';
+-- Dizi Karakteri 10 (Ramiz)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654322' AND B.birim_adi = N'1. Tank Bölüğü';
+-- Dizi Karakteri 11 (Cengiz)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654323' AND B.birim_adi = N'1. Bakım Bölüğü';
+-- Dizi Karakteri 12 (Ali)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654324' AND B.birim_adi = N'1. Destek Bölüğü';
+-- Dizi Karakteri 13 (Haydar)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654321' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+-- Dizi Karakteri 14 (Ömer)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654322' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+-- Dizi Karakteri 15 (Bayram)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654323' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+-- Dizi Karakteri 16 (Seyfi)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654324' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+-- Dizi Karakteri 17 (Mert)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654321' AND B.birim_adi = N'Adana Lojistik Birliği';
+-- Dizi Karakteri 18 (Sarp)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654322' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+-- Dizi Karakteri 19 (Güven)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654323' AND B.birim_adi = N'1. Komando Bölüğü';
+-- Kritik Asker 20 (Kaan) - Çoklu birim geçmişi
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-01-01' AS DATE), CAST('2023-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'22334455668' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-07-01' AS DATE), CAST('2023-12-31' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'22334455668' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), CAST('2024-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'22334455668' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-07-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'22334455668' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+-- Dizi Karakteri 21 (Celal)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654324' AND B.birim_adi = N'1. Piyade Bölüğü';
+-- Dizi Karakteri 22 (Tarık)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654325' AND B.birim_adi = N'1. Tank Bölüğü';
+-- Dizi Karakteri 23 (Ömer)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654326' AND B.birim_adi = N'1. Bakım Bölüğü';
+-- Dizi Karakteri 24 (Mahsun)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654327' AND B.birim_adi = N'1. Destek Bölüğü';
+-- Dizi Karakteri 25 (Ferhat)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654328' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+-- Dizi Karakteri 26 (Cevdet)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654329' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+-- Dizi Karakteri 27 (Muammer)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654330' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+-- Dizi Karakteri 28 (Korku)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654331' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+-- Dizi Karakteri 29 (Burak)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654332' AND B.birim_adi = N'Adana Lojistik Birliği';
+-- Dizi Karakteri 30 (Leyla)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654333' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+-- Dizi Karakteri 31 (Şirin)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654334' AND B.birim_adi = N'1. Komando Bölüğü';
+-- Dizi Karakteri 32 (Nadia)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654335' AND B.birim_adi = N'2. Komando Bölüğü';
+-- Dizi Karakteri 33 (İpek)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654336' AND B.birim_adi = N'1. Piyade Bölüğü';
+-- Dizi Karakteri 34 (Kerem)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654337' AND B.birim_adi = N'1. Tank Bölüğü';
+-- Dizi Karakteri 35 (Zülfikar)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654338' AND B.birim_adi = N'1. Bakım Bölüğü';
+-- Dizi Karakteri 36 (Hamza)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654339' AND B.birim_adi = N'1. Destek Bölüğü';
+-- Dizi Karakteri 37 (Sedat)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'10987654340' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+-- Dizi Karakteri 38 (Bahar)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654325' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+-- Dizi Karakteri 39 (Murat)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654326' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+-- Kritik Asker 40 (Alperen) - Çoklu birim geçmişi
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-01-01' AS DATE), CAST('2023-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'11223344556' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-07-01' AS DATE), CAST('2023-12-31' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'11223344556' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), CAST('2024-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'11223344556' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-07-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'11223344556' AND B.birim_adi = N'Adana Lojistik Birliği';
+-- Dizi Karakteri 41 (İnci)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654327' AND B.birim_adi = N'Adana Lojistik Birliği';
+-- Dizi Karakteri 42 (Zeynel)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654328' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+-- Dizi Karakteri 43 (Kaya)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654329' AND B.birim_adi = N'1. Komando Bölüğü';
+-- Dizi Karakteri 44 (Nazlı)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654330' AND B.birim_adi = N'2. Komando Bölüğü';
+-- Dizi Karakteri 45 (Serdar)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654331' AND B.birim_adi = N'1. Piyade Bölüğü';
+-- Dizi Karakteri 46 (Ahmet)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654332' AND B.birim_adi = N'1. Tank Bölüğü';
+-- Dizi Karakteri 47 (Hüseyin)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654333' AND B.birim_adi = N'1. Bakım Bölüğü';
+-- Dizi Karakteri 48 (Tefo)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654334' AND B.birim_adi = N'1. Destek Bölüğü';
+-- Dizi Karakteri 49 (Aydın)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654335' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+-- Dizi Karakteri 50 (Fikret)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654336' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+-- Dizi Karakteri 51 (Bülent)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654337' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+-- Dizi Karakteri 52 (Selim)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654338' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+-- Dizi Karakteri 53 (Yasemin)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654339' AND B.birim_adi = N'Adana Lojistik Birliği';
+-- Dizi Karakteri 54 (Elif)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'20987654340' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+-- Dizi Karakteri 55 (Harun)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654325' AND B.birim_adi = N'1. Komando Bölüğü';
+-- Dizi Karakteri 56 (Sercan)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654326' AND B.birim_adi = N'2. Komando Bölüğü';
+-- Dizi Karakteri 57 (Zehra)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654327' AND B.birim_adi = N'1. Piyade Bölüğü';
+-- Dizi Karakteri 58 (Karaağaç)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654328' AND B.birim_adi = N'1. Tank Bölüğü';
+-- Dizi Karakteri 59 (Mesut)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654329' AND B.birim_adi = N'1. Bakım Bölüğü';
+-- Kritik Asker 60 (Yiğit) - Çoklu birim geçmişi
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-01-01' AS DATE), CAST('2023-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'55667788994' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-07-01' AS DATE), CAST('2023-12-31' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'55667788994' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), CAST('2024-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'55667788994' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-07-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'55667788994' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+-- Dizi Karakteri 61 (Kerim)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654330' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+-- Dizi Karakteri 62 (Aslan)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654331' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+-- Dizi Karakteri 63 (Güneş)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654332' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+-- Dizi Karakteri 64 (Serap)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654333' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+-- Dizi Karakteri 65 (Hüseyin)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654334' AND B.birim_adi = N'Adana Lojistik Birliği';
+-- Dizi Karakteri 66 (Naif)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654335' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+-- Dizi Karakteri 67 (Garip)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654336' AND B.birim_adi = N'1. Komando Bölüğü';
+-- Dizi Karakteri 68 (Temel)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654337' AND B.birim_adi = N'2. Komando Bölüğü';
+-- Dizi Karakteri 69 (Musa)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654338' AND B.birim_adi = N'1. Piyade Bölüğü';
+-- Dizi Karakteri 70 (Yıldız)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654339' AND B.birim_adi = N'1. Tank Bölüğü';
+-- Dizi Karakteri 71 (Süha)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'30987654340' AND B.birim_adi = N'1. Bakım Bölüğü';
+-- Dizi Karakteri 72 (Haluk)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654325' AND B.birim_adi = N'1. Destek Bölüğü';
+-- Dizi Karakteri 73 (Naz)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654326' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+-- Dizi Karakteri 74 (Berrin)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654327' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+-- Dizi Karakteri 75 (Kerem)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654328' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+-- Dizi Karakteri 76 (Fatih)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654329' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+-- Dizi Karakteri 77 (Safiye)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654330' AND B.birim_adi = N'Adana Lojistik Birliği';
+-- Dizi Karakteri 78 (Cumali)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654331' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+-- Dizi Karakteri 79 (Kadir)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654332' AND B.birim_adi = N'1. Komando Bölüğü';
+-- Kritik Asker 80 (Bora) - Çoklu birim geçmişi
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-01-01' AS DATE), CAST('2023-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'33445566770' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-07-01' AS DATE), CAST('2023-12-31' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'33445566770' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), CAST('2024-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'33445566770' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-07-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'33445566770' AND B.birim_adi = N'1. Bakım Bölüğü';
+-- Dizi Karakteri 81 (Sedef)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654333' AND B.birim_adi = N'1. Piyade Bölüğü';
+-- Dizi Karakteri 82 (Zeynep)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654334' AND B.birim_adi = N'1. Tank Bölüğü';
+-- Dizi Karakteri 83 (Berk)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654335' AND B.birim_adi = N'1. Bakım Bölüğü';
+-- Dizi Karakteri 84 (Hakan)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654336' AND B.birim_adi = N'1. Destek Bölüğü';
+-- Dizi Karakteri 85 (Volkan)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654337' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+-- Dizi Karakteri 86 (Mehmet)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654338' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+-- Dizi Karakteri 87 (Serdar)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654339' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+-- Dizi Karakteri 88 (Can)
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'40987654340' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 89 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 90 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 91 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 92 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 93 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 94 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 95 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 96 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 97 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 98 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 99 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+-- Kritik Asker 100 (Mete) - Çoklu birim geçmişi
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-01-01' AS DATE), CAST('2023-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'44556677882' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2023-07-01' AS DATE), CAST('2023-12-31' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'44556677882' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), CAST('2024-06-30' AS DATE) FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'44556677882' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-07-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.tc_kimlik_no = N'44556677882' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 101 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 102 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 103 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 104 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 105 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 106 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 107 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 108 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 109 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 110 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 111 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 112 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 113 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 114 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 115 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 116 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 117 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 118 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 119 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 120 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 121 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 122 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 123 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 124 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 125 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 126 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 127 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 128 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 129 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 130 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 131 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 132 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 133 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 134 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 135 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 136 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 137 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 138 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 139 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 140 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 141 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 142 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 143 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 144 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 145 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 146 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 147 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 148 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 149 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 150 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 151 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 152 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 153 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 154 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 155 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 156 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 157 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 158 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 159 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 160 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 161 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 162 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 163 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 164 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 165 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 166 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 167 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 168 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 169 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 170 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 171 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 172 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 173 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 174 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 175 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 176 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 177 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 178 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 179 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 180 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 181 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 182 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 183 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 184 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 185 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 186 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 187 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 188 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 189 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 190 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 191 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 192 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 193 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 194 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 195 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 196 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 197 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 198 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 199 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 200 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 201 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 202 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 203 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 204 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 205 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 206 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 207 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 208 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 209 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 210 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 211 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 212 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 213 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 214 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 215 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 216 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 217 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 218 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 219 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 220 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 221 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 222 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 223 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 224 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 225 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 226 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 227 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 228 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 229 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 230 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 231 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 232 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 233 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 234 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 235 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 236 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 237 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 238 AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 239 AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 240 AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 241 AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 242 AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 243 AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 244 AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 245 AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 246 AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 247 AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 248 AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 249 AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) SELECT A.asker_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Asker A, Birim B WHERE A.asker_no = 250 AND B.birim_adi = N'1. Tank Bölüğü';
+GO
 
-CREATE TABLE #Karakter (
-    sira INT IDENTITY(1,1) PRIMARY KEY,
-    dizi NVARCHAR(40) NOT NULL,
-    ad NVARCHAR(80) NOT NULL,
-    soyad NVARCHAR(80) NOT NULL,
-    cinsiyet CHAR(1) NOT NULL
-);
+-- 16. Techizat Tablosu
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0001', N'Teçhizat 1', N'Standart askeri teçhizat 1', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0002', N'Teçhizat 2', N'Standart askeri teçhizat 2', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0003', N'Teçhizat 3', N'Standart askeri teçhizat 3', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0004', N'Teçhizat 4', N'Standart askeri teçhizat 4', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0005', N'Teçhizat 5', N'Standart askeri teçhizat 5', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0006', N'Teçhizat 6', N'Standart askeri teçhizat 6', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0007', N'Teçhizat 7', N'Standart askeri teçhizat 7', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0008', N'Teçhizat 8', N'Standart askeri teçhizat 8', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0009', N'Teçhizat 9', N'Standart askeri teçhizat 9', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0010', N'Teçhizat 10', N'Standart askeri teçhizat 10', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0011', N'Teçhizat 11', N'Standart askeri teçhizat 11', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0012', N'Teçhizat 12', N'Standart askeri teçhizat 12', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0013', N'Teçhizat 13', N'Standart askeri teçhizat 13', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0014', N'Teçhizat 14', N'Standart askeri teçhizat 14', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0015', N'Teçhizat 15', N'Standart askeri teçhizat 15', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0016', N'Teçhizat 16', N'Standart askeri teçhizat 16', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0017', N'Teçhizat 17', N'Standart askeri teçhizat 17', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0018', N'Teçhizat 18', N'Standart askeri teçhizat 18', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0019', N'Teçhizat 19', N'Standart askeri teçhizat 19', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0020', N'Teçhizat 20', N'Standart askeri teçhizat 20', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0021', N'Teçhizat 21', N'Standart askeri teçhizat 21', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0022', N'Teçhizat 22', N'Standart askeri teçhizat 22', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0023', N'Teçhizat 23', N'Standart askeri teçhizat 23', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0024', N'Teçhizat 24', N'Standart askeri teçhizat 24', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0025', N'Teçhizat 25', N'Standart askeri teçhizat 25', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0026', N'Teçhizat 26', N'Standart askeri teçhizat 26', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0027', N'Teçhizat 27', N'Standart askeri teçhizat 27', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0028', N'Teçhizat 28', N'Standart askeri teçhizat 28', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0029', N'Teçhizat 29', N'Standart askeri teçhizat 29', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0030', N'Teçhizat 30', N'Standart askeri teçhizat 30', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0031', N'Teçhizat 31', N'Standart askeri teçhizat 31', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0032', N'Teçhizat 32', N'Standart askeri teçhizat 32', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0033', N'Teçhizat 33', N'Standart askeri teçhizat 33', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0034', N'Teçhizat 34', N'Standart askeri teçhizat 34', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0035', N'Teçhizat 35', N'Standart askeri teçhizat 35', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0036', N'Teçhizat 36', N'Standart askeri teçhizat 36', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0037', N'Teçhizat 37', N'Standart askeri teçhizat 37', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0038', N'Teçhizat 38', N'Standart askeri teçhizat 38', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0039', N'Teçhizat 39', N'Standart askeri teçhizat 39', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0040', N'Teçhizat 40', N'Standart askeri teçhizat 40', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0041', N'Teçhizat 41', N'Standart askeri teçhizat 41', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0042', N'Teçhizat 42', N'Standart askeri teçhizat 42', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0043', N'Teçhizat 43', N'Standart askeri teçhizat 43', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0044', N'Teçhizat 44', N'Standart askeri teçhizat 44', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0045', N'Teçhizat 45', N'Standart askeri teçhizat 45', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0046', N'Teçhizat 46', N'Standart askeri teçhizat 46', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0047', N'Teçhizat 47', N'Standart askeri teçhizat 47', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0048', N'Teçhizat 48', N'Standart askeri teçhizat 48', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0049', N'Teçhizat 49', N'Standart askeri teçhizat 49', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0050', N'Teçhizat 50', N'Standart askeri teçhizat 50', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0051', N'Teçhizat 51', N'Standart askeri teçhizat 51', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0052', N'Teçhizat 52', N'Standart askeri teçhizat 52', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0053', N'Teçhizat 53', N'Standart askeri teçhizat 53', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0054', N'Teçhizat 54', N'Standart askeri teçhizat 54', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0055', N'Teçhizat 55', N'Standart askeri teçhizat 55', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0056', N'Teçhizat 56', N'Standart askeri teçhizat 56', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0057', N'Teçhizat 57', N'Standart askeri teçhizat 57', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0058', N'Teçhizat 58', N'Standart askeri teçhizat 58', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0059', N'Teçhizat 59', N'Standart askeri teçhizat 59', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0060', N'Teçhizat 60', N'Standart askeri teçhizat 60', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0061', N'Teçhizat 61', N'Standart askeri teçhizat 61', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0062', N'Teçhizat 62', N'Standart askeri teçhizat 62', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0063', N'Teçhizat 63', N'Standart askeri teçhizat 63', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0064', N'Teçhizat 64', N'Standart askeri teçhizat 64', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0065', N'Teçhizat 65', N'Standart askeri teçhizat 65', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0066', N'Teçhizat 66', N'Standart askeri teçhizat 66', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0067', N'Teçhizat 67', N'Standart askeri teçhizat 67', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0068', N'Teçhizat 68', N'Standart askeri teçhizat 68', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0069', N'Teçhizat 69', N'Standart askeri teçhizat 69', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0070', N'Teçhizat 70', N'Standart askeri teçhizat 70', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0071', N'Teçhizat 71', N'Standart askeri teçhizat 71', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0072', N'Teçhizat 72', N'Standart askeri teçhizat 72', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0073', N'Teçhizat 73', N'Standart askeri teçhizat 73', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0074', N'Teçhizat 74', N'Standart askeri teçhizat 74', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0075', N'Teçhizat 75', N'Standart askeri teçhizat 75', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0076', N'Teçhizat 76', N'Standart askeri teçhizat 76', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0077', N'Teçhizat 77', N'Standart askeri teçhizat 77', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0078', N'Teçhizat 78', N'Standart askeri teçhizat 78', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0079', N'Teçhizat 79', N'Standart askeri teçhizat 79', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0080', N'Teçhizat 80', N'Standart askeri teçhizat 80', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0081', N'Teçhizat 81', N'Standart askeri teçhizat 81', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0082', N'Teçhizat 82', N'Standart askeri teçhizat 82', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0083', N'Teçhizat 83', N'Standart askeri teçhizat 83', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0084', N'Teçhizat 84', N'Standart askeri teçhizat 84', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0085', N'Teçhizat 85', N'Standart askeri teçhizat 85', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0086', N'Teçhizat 86', N'Standart askeri teçhizat 86', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0087', N'Teçhizat 87', N'Standart askeri teçhizat 87', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0088', N'Teçhizat 88', N'Standart askeri teçhizat 88', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0089', N'Teçhizat 89', N'Standart askeri teçhizat 89', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0090', N'Teçhizat 90', N'Standart askeri teçhizat 90', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0091', N'Teçhizat 91', N'Standart askeri teçhizat 91', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0092', N'Teçhizat 92', N'Standart askeri teçhizat 92', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0093', N'Teçhizat 93', N'Standart askeri teçhizat 93', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0094', N'Teçhizat 94', N'Standart askeri teçhizat 94', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0095', N'Teçhizat 95', N'Standart askeri teçhizat 95', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0096', N'Teçhizat 96', N'Standart askeri teçhizat 96', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0097', N'Teçhizat 97', N'Standart askeri teçhizat 97', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0098', N'Teçhizat 98', N'Standart askeri teçhizat 98', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0099', N'Teçhizat 99', N'Standart askeri teçhizat 99', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0100', N'Teçhizat 100', N'Standart askeri teçhizat 100', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0101', N'Teçhizat 101', N'Standart askeri teçhizat 101', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0102', N'Teçhizat 102', N'Standart askeri teçhizat 102', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0103', N'Teçhizat 103', N'Standart askeri teçhizat 103', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0104', N'Teçhizat 104', N'Standart askeri teçhizat 104', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0105', N'Teçhizat 105', N'Standart askeri teçhizat 105', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0106', N'Teçhizat 106', N'Standart askeri teçhizat 106', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0107', N'Teçhizat 107', N'Standart askeri teçhizat 107', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0108', N'Teçhizat 108', N'Standart askeri teçhizat 108', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0109', N'Teçhizat 109', N'Standart askeri teçhizat 109', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0110', N'Teçhizat 110', N'Standart askeri teçhizat 110', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0111', N'Teçhizat 111', N'Standart askeri teçhizat 111', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0112', N'Teçhizat 112', N'Standart askeri teçhizat 112', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0113', N'Teçhizat 113', N'Standart askeri teçhizat 113', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0114', N'Teçhizat 114', N'Standart askeri teçhizat 114', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0115', N'Teçhizat 115', N'Standart askeri teçhizat 115', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0116', N'Teçhizat 116', N'Standart askeri teçhizat 116', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0117', N'Teçhizat 117', N'Standart askeri teçhizat 117', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0118', N'Teçhizat 118', N'Standart askeri teçhizat 118', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0119', N'Teçhizat 119', N'Standart askeri teçhizat 119', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0120', N'Teçhizat 120', N'Standart askeri teçhizat 120', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0121', N'Teçhizat 121', N'Standart askeri teçhizat 121', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0122', N'Teçhizat 122', N'Standart askeri teçhizat 122', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0123', N'Teçhizat 123', N'Standart askeri teçhizat 123', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0124', N'Teçhizat 124', N'Standart askeri teçhizat 124', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0125', N'Teçhizat 125', N'Standart askeri teçhizat 125', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0126', N'Teçhizat 126', N'Standart askeri teçhizat 126', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0127', N'Teçhizat 127', N'Standart askeri teçhizat 127', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0128', N'Teçhizat 128', N'Standart askeri teçhizat 128', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0129', N'Teçhizat 129', N'Standart askeri teçhizat 129', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0130', N'Teçhizat 130', N'Standart askeri teçhizat 130', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0131', N'Teçhizat 131', N'Standart askeri teçhizat 131', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0132', N'Teçhizat 132', N'Standart askeri teçhizat 132', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0133', N'Teçhizat 133', N'Standart askeri teçhizat 133', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0134', N'Teçhizat 134', N'Standart askeri teçhizat 134', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0135', N'Teçhizat 135', N'Standart askeri teçhizat 135', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0136', N'Teçhizat 136', N'Standart askeri teçhizat 136', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0137', N'Teçhizat 137', N'Standart askeri teçhizat 137', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0138', N'Teçhizat 138', N'Standart askeri teçhizat 138', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0139', N'Teçhizat 139', N'Standart askeri teçhizat 139', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0140', N'Teçhizat 140', N'Standart askeri teçhizat 140', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0141', N'Teçhizat 141', N'Standart askeri teçhizat 141', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0142', N'Teçhizat 142', N'Standart askeri teçhizat 142', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0143', N'Teçhizat 143', N'Standart askeri teçhizat 143', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0144', N'Teçhizat 144', N'Standart askeri teçhizat 144', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0145', N'Teçhizat 145', N'Standart askeri teçhizat 145', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0146', N'Teçhizat 146', N'Standart askeri teçhizat 146', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0147', N'Teçhizat 147', N'Standart askeri teçhizat 147', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0148', N'Teçhizat 148', N'Standart askeri teçhizat 148', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0149', N'Teçhizat 149', N'Standart askeri teçhizat 149', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0150', N'Teçhizat 150', N'Standart askeri teçhizat 150', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0151', N'Teçhizat 151', N'Standart askeri teçhizat 151', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0152', N'Teçhizat 152', N'Standart askeri teçhizat 152', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0153', N'Teçhizat 153', N'Standart askeri teçhizat 153', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0154', N'Teçhizat 154', N'Standart askeri teçhizat 154', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0155', N'Teçhizat 155', N'Standart askeri teçhizat 155', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0156', N'Teçhizat 156', N'Standart askeri teçhizat 156', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0157', N'Teçhizat 157', N'Standart askeri teçhizat 157', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0158', N'Teçhizat 158', N'Standart askeri teçhizat 158', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0159', N'Teçhizat 159', N'Standart askeri teçhizat 159', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0160', N'Teçhizat 160', N'Standart askeri teçhizat 160', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0161', N'Teçhizat 161', N'Standart askeri teçhizat 161', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0162', N'Teçhizat 162', N'Standart askeri teçhizat 162', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0163', N'Teçhizat 163', N'Standart askeri teçhizat 163', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0164', N'Teçhizat 164', N'Standart askeri teçhizat 164', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0165', N'Teçhizat 165', N'Standart askeri teçhizat 165', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0166', N'Teçhizat 166', N'Standart askeri teçhizat 166', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0167', N'Teçhizat 167', N'Standart askeri teçhizat 167', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0168', N'Teçhizat 168', N'Standart askeri teçhizat 168', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0169', N'Teçhizat 169', N'Standart askeri teçhizat 169', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0170', N'Teçhizat 170', N'Standart askeri teçhizat 170', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0171', N'Teçhizat 171', N'Standart askeri teçhizat 171', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0172', N'Teçhizat 172', N'Standart askeri teçhizat 172', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0173', N'Teçhizat 173', N'Standart askeri teçhizat 173', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0174', N'Teçhizat 174', N'Standart askeri teçhizat 174', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0175', N'Teçhizat 175', N'Standart askeri teçhizat 175', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0176', N'Teçhizat 176', N'Standart askeri teçhizat 176', N'AKTIF', 1);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0177', N'Teçhizat 177', N'Standart askeri teçhizat 177', N'AKTIF', 2);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0178', N'Teçhizat 178', N'Standart askeri teçhizat 178', N'AKTIF', 3);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0179', N'Teçhizat 179', N'Standart askeri teçhizat 179', N'AKTIF', 5);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) VALUES (N'TCH-0180', N'Teçhizat 180', N'Standart askeri teçhizat 180', N'AKTIF', 6);
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) SELECT N'C4-YLV-202', N'C4 Plastik Patlayıcı', N'Yüksek infilak güçlü plastik patlayıcı', N'AKTIF', techizat_tur_no FROM TechizatTuru WHERE tur_adi = N'Patlayıcı';
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) SELECT N'DYN-YLV-303', N'Dinamit Lokumu', N'İnşaat ve engelleri aşmak için kullanılan dinamit', N'AKTIF', techizat_tur_no FROM TechizatTuru WHERE tur_adi = N'Patlayıcı';
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) SELECT N'MIN-YLV-404', N'Anti-Personel Mayını', N'Alan savunması için kullanılan basınç tetiklemeli mayın', N'AKTIF', techizat_tur_no FROM TechizatTuru WHERE tur_adi = N'Patlayıcı';
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) SELECT N'SEM-YLV-505', N'Semtex Grenade', N'Yüksek etkili plastik el bombası', N'AKTIF', techizat_tur_no FROM TechizatTuru WHERE tur_adi = N'Patlayıcı';
+INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no) SELECT N'TNT-YLV-101', N'TNT Blok 200g', N'Standart askeri tahrip kalıbı', N'AKTIF', techizat_tur_no FROM TechizatTuru WHERE tur_adi = N'Patlayıcı';
+GO
 
-INSERT INTO #Karakter (dizi, ad, soyad, cinsiyet)
-VALUES
-(N'Kurtlar Vadisi', N'Polat', N'Alemdar', 'E'), (N'Kurtlar Vadisi', N'Süleyman', N'Çakır', 'E'), (N'Kurtlar Vadisi', N'Memati', N'Baş', 'E'), (N'Kurtlar Vadisi', N'Abdülhey', N'Çoban', 'E'), (N'Kurtlar Vadisi', N'Aslan', N'Akbey', 'E'),
-(N'Kurtlar Vadisi', N'Elif', N'Eylül', 'K'), (N'Kurtlar Vadisi', N'Laz', N'Ziya', 'E'), (N'Kurtlar Vadisi', N'Hüsrev', N'Ağa', 'E'), (N'Kurtlar Vadisi', N'Tuncay', N'Kantarcı', 'E'), (N'Kurtlar Vadisi', N'Erhan', N'Ufak', 'E'),
-(N'Kurtlar Vadisi', N'Derya', N'Çakır', 'K'), (N'Kurtlar Vadisi', N'İplikçi', N'Nedim', 'E'), (N'Kurtlar Vadisi', N'Testere', N'Necmi', 'E'), (N'Kurtlar Vadisi', N'Seyfo', N'Dayı', 'E'), (N'Kurtlar Vadisi', N'Kılıç', N'Karahanlı', 'E'),
-(N'Ezel', N'Ezel', N'Bayraktar', 'E'), (N'Ezel', N'Ömer', N'Uçar', 'E'), (N'Ezel', N'Eyşan', N'Tezcan', 'K'), (N'Ezel', N'Cengiz', N'Atay', 'E'), (N'Ezel', N'Ali', N'Kırgız', 'E'),
-(N'Ezel', N'Ramiz', N'Karaeski', 'E'), (N'Ezel', N'Kenan', N'Birkan', 'E'), (N'Ezel', N'Selma', N'Hünel', 'K'), (N'Ezel', N'Tevfik', N'Zaim', 'E'), (N'Ezel', N'Bade', N'Uysal', 'K'),
-(N'Ezel', N'Serdar', N'Tezcan', 'E'), (N'Ezel', N'Mert', N'Uçar', 'E'), (N'Ezel', N'Azad', N'Karaeski', 'K'), (N'Ezel', N'Mümtaz', N'Uçar', 'E'), (N'Ezel', N'Meliha', N'Uçar', 'K'),
-(N'Sıfır Bir', N'Savaş', N'Satıroğlu', 'E'), (N'Sıfır Bir', N'Cio', N'Baba', 'E'), (N'Sıfır Bir', N'Özgür', N'Mermer', 'E'), (N'Sıfır Bir', N'Burak', N'Şahin', 'E'), (N'Sıfır Bir', N'Anafor', N'Ali', 'E'),
-(N'Sıfır Bir', N'Azad', N'Yılmaz', 'E'), (N'Sıfır Bir', N'Berto', N'Demir', 'E'), (N'Sıfır Bir', N'Salim', N'Kara', 'E'), (N'Sıfır Bir', N'Mahmut', N'Yıldız', 'E'), (N'Sıfır Bir', N'Berfin', N'Kaya', 'K'),
-(N'İçerde', N'Sarp', N'Yılmaz', 'E'), (N'İçerde', N'Mert', N'Karadağ', 'E'), (N'İçerde', N'Celal', N'Duman', 'E'), (N'İçerde', N'Melek', N'Yıldız', 'K'), (N'İçerde', N'Eylem', N'Aydın', 'K'),
-(N'İçerde', N'Füsun', N'Yılmaz', 'K'), (N'İçerde', N'Coşkun', N'Kaya', 'E'), (N'İçerde', N'Davut', N'Aktaş', 'E'), (N'İçerde', N'Yusuf', N'Kaya', 'E'), (N'İçerde', N'Mustafa', N'Karadağ', 'E'),
-(N'Kuzey Güney', N'Kuzey', N'Tekinoğlu', 'E'), (N'Kuzey Güney', N'Güney', N'Tekinoğlu', 'E'), (N'Kuzey Güney', N'Cemre', N'Çayak', 'K'), (N'Kuzey Güney', N'Banu', N'Sinaner', 'K'), (N'Kuzey Güney', N'Simay', N'Canay', 'K'),
-(N'Kuzey Güney', N'Zeynep', N'Taşkın', 'K'), (N'Kuzey Güney', N'Sami', N'Tekinoğlu', 'E'), (N'Kuzey Güney', N'Handan', N'Tekinoğlu', 'K'), (N'Kuzey Güney', N'Barış', N'Hakmen', 'E'), (N'Kuzey Güney', N'Ferhat', N'Şadoğlu', 'E');
+-- 17. TransferOlur Tablosu
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0001' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0002' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0003' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0004' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0005' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0006' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0007' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0008' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0009' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0010' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0011' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0012' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0013' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0014' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0015' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0016' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0017' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0018' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0019' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0020' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0021' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0022' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0023' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0024' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0025' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0026' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0027' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0028' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0029' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0030' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0031' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0032' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0033' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0034' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0035' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0036' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0037' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0038' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0039' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0040' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0041' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0042' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0043' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0044' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0045' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0046' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0047' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0048' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0049' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0050' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0051' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0052' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0053' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0054' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0055' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0056' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0057' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0058' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0059' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0060' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0061' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0062' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0063' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0064' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0065' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0066' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0067' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0068' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0069' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0070' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0071' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0072' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0073' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0074' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0075' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0076' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0077' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0078' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0079' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0080' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0081' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0082' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0083' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0084' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0085' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0086' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0087' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0088' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0089' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0090' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0091' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0092' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0093' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0094' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0095' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0096' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0097' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0098' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0099' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0100' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0101' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0102' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0103' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0104' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0105' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0106' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0107' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0108' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0109' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0110' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0111' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0112' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0113' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0114' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0115' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0116' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0117' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0118' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0119' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0120' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0121' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0122' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0123' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0124' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0125' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0126' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0127' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0128' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0129' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0130' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0131' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0132' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0133' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0134' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0135' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0136' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0137' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0138' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0139' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0140' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0141' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0142' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0143' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0144' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0145' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0146' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0147' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0148' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0149' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0150' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0151' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0152' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0153' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0154' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0155' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0156' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0157' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0158' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0159' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0160' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0161' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0162' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0163' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0164' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0165' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0166' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0167' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0168' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0169' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0170' AND B.birim_adi = N'Yalova 2. Kara Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0171' AND B.birim_adi = N'Ankara 3. Tank Taburu';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0172' AND B.birim_adi = N'İzmir Hava Bakım Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0173' AND B.birim_adi = N'Adana Lojistik Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0174' AND B.birim_adi = N'Trabzon Deniz Destek Birliği';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0175' AND B.birim_adi = N'1. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0176' AND B.birim_adi = N'2. Komando Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0177' AND B.birim_adi = N'1. Piyade Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0178' AND B.birim_adi = N'1. Tank Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0179' AND B.birim_adi = N'1. Bakım Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2024-01-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TCH-0180' AND B.birim_adi = N'1. Destek Bölüğü';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2025-06-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'C4-YLV-202' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2025-06-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'DYN-YLV-303' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2025-06-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'MIN-YLV-404' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2025-06-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'SEM-YLV-505' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi) SELECT techizat_no, B.birim_no, CAST('2025-06-01' AS DATE), NULL FROM Techizat T, Birim B WHERE T.seri_numarasi = N'TNT-YLV-101' AND B.birim_adi = N'Yalova 1. Komando Tugayı';
+GO
 
-SET @i = 1;
-WHILE @i <= 200
-BEGIN
-    DECLARE @karakter_sira INT = ((@i - 1) % (SELECT COUNT(*) FROM #Karakter)) + 1;
-    DECLARE @ad NVARCHAR(80) = (SELECT ad FROM #Karakter WHERE sira = @karakter_sira);
-    DECLARE @soyad NVARCHAR(80) = (SELECT soyad FROM #Karakter WHERE sira = @karakter_sira);
-    DECLARE @cinsiyet CHAR(1) = (SELECT cinsiyet FROM #Karakter WHERE sira = @karakter_sira);
-    DECLARE @tc_kimlik_no CHAR(11) = RIGHT(CONCAT('00000000000', 11000000000 + @i), 11);
-    DECLARE @cadde_sokak_no INT = (SELECT cadde_sokak_no FROM (SELECT cadde_sokak_no, ROW_NUMBER() OVER (ORDER BY cadde_sokak_no) rn FROM CaddeSokak) X WHERE rn = ((@i - 1) % @cadde_sayisi) + 1);
-    DECLARE @rutbe_no INT = (SELECT rutbe_no FROM (SELECT rutbe_no, ROW_NUMBER() OVER (ORDER BY rutbe_no) rn FROM Rutbe) X WHERE rn = ((@i - 1) % @rutbe_sayisi) + 1);
+-- 18. Zimmetlenir Tablosu
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 1, CAST('2025-07-01' AS DATE), CAST('2025-08-01' AS DATE) FROM Techizat T WHERE T.seri_numarasi = N'C4-YLV-202';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 3, CAST('2025-09-01' AS DATE), NULL FROM Techizat T WHERE T.seri_numarasi = N'C4-YLV-202';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 1, CAST('2025-06-01' AS DATE), CAST('2025-07-01' AS DATE) FROM Techizat T WHERE T.seri_numarasi = N'DYN-YLV-303';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 2, CAST('2025-08-01' AS DATE), CAST('2025-09-01' AS DATE) FROM Techizat T WHERE T.seri_numarasi = N'DYN-YLV-303';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 1, CAST('2025-10-01' AS DATE), NULL FROM Techizat T WHERE T.seri_numarasi = N'DYN-YLV-303';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 4, CAST('2025-09-01' AS DATE), NULL FROM Techizat T WHERE T.seri_numarasi = N'SEM-YLV-505';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 1, CAST('2025-07-01' AS DATE), CAST('2025-08-01' AS DATE) FROM Techizat T WHERE T.seri_numarasi = N'TNT-YLV-101';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 2, CAST('2025-09-01' AS DATE), CAST('2025-10-01' AS DATE) FROM Techizat T WHERE T.seri_numarasi = N'TNT-YLV-101';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) SELECT T.techizat_no, 4, CAST('2025-11-01' AS DATE), NULL FROM Techizat T WHERE T.seri_numarasi = N'TNT-YLV-101';
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (1, 11, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (2, 12, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (3, 13, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (4, 14, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (5, 15, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (6, 16, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (7, 17, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (8, 18, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (9, 19, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (10, 20, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (11, 21, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (12, 22, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (13, 23, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (14, 24, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (15, 25, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (16, 26, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (17, 27, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (18, 28, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (19, 29, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (20, 30, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (21, 31, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (22, 32, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (23, 33, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (24, 34, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (25, 35, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (26, 36, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (27, 37, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (28, 38, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (29, 39, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (30, 40, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (31, 41, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (32, 42, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (33, 43, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (34, 44, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (35, 45, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (36, 46, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (37, 47, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (38, 48, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (39, 49, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (40, 50, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (41, 51, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (42, 52, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (43, 53, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (44, 54, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (45, 55, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (46, 56, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (47, 57, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (48, 58, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (49, 59, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (50, 60, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (51, 61, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (52, 62, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (53, 63, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (54, 64, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (55, 65, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (56, 66, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (57, 67, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (58, 68, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (59, 69, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (60, 70, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (61, 71, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (62, 72, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (63, 73, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (64, 74, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (65, 75, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (66, 76, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (67, 77, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (68, 78, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (69, 79, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (70, 80, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (71, 81, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (72, 82, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (73, 83, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (74, 84, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (75, 85, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (76, 86, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (77, 87, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (78, 88, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (79, 89, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (80, 90, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (81, 91, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (82, 92, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (83, 93, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (84, 94, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (85, 95, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (86, 96, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (87, 97, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (88, 98, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (89, 99, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (90, 100, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (91, 101, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (92, 102, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (93, 103, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (94, 104, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (95, 105, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (96, 106, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (97, 107, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (98, 108, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (99, 109, CAST('2025-01-01' AS DATE), NULL);
+INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi) VALUES (100, 110, CAST('2025-01-01' AS DATE), NULL);
+GO
 
-    IF NOT EXISTS (SELECT 1 FROM Asker WHERE tc_kimlik_no = @tc_kimlik_no)
-        INSERT INTO Asker (
-            tc_kimlik_no, ad, soyad, cinsiyet, dogum_tarihi, yas, cadde_sokak_no,
-            dis_kapi_no, ic_kapi_no, adres_aciklamasi, telefon, atis_durumu,
-            askerlik_suresi_gun, toplam_izin_suresi_gun, kullanilan_izin_suresi_gun,
-            kalan_izin_suresi_gun, disiplin_cezasi_gun, teslim_tarihi, rutbe_no, durum
-        )
-        VALUES (
-            @tc_kimlik_no, @ad, @soyad, @cinsiyet, DATEADD(YEAR, -20 - (@i % 15), CAST(GETDATE() AS DATE)),
-            20 + (@i % 15), @cadde_sokak_no, CONVERT(NVARCHAR(20), 10 + @i), CONVERT(NVARCHAR(20), 1 + (@i % 24)),
-            CONCAT((SELECT dizi FROM #Karakter WHERE sira = @karakter_sira), N' ekibi mock adresi ', @i),
-            CONCAT(N'05', RIGHT(CONCAT('000000000', 300000000 + @i), 9)),
-            CASE WHEN @i % 4 = 0 THEN N'YAPMADI' ELSE N'YAPTI' END,
-            180 + (@i % 181), 24 + (@i % 8), @i % 12, (24 + (@i % 8)) - (@i % 12),
-            @i % 7, DATEADD(DAY, -(@i % 260), CAST(GETDATE() AS DATE)), @rutbe_no,
-            CASE WHEN @i % 11 = 0 THEN N'BITIRDI' ELSE N'DEVAM_EDIYOR' END
-        );
+-- 19. NobetTutar Tablosu
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (20, 1, CAST('2026-05-10 08:00:00' AS DATETIME2), CAST('2026-05-10 12:00:00' AS DATETIME2), 120.0, 120.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (40, 1, CAST('2026-05-11 08:00:00' AS DATETIME2), CAST('2026-05-11 12:00:00' AS DATETIME2), 120.0, 120.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (60, 1, CAST('2026-05-12 08:00:00' AS DATETIME2), CAST('2026-05-12 12:00:00' AS DATETIME2), 120.0, 120.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (80, 1, CAST('2026-05-13 08:00:00' AS DATETIME2), CAST('2026-05-13 12:00:00' AS DATETIME2), 120.0, 120.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (100, 1, CAST('2026-05-14 08:00:00' AS DATETIME2), CAST('2026-05-14 12:00:00' AS DATETIME2), 120.0, 120.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (1, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (2, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (3, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (4, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (5, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (6, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (7, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (8, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (9, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (10, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (11, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (12, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (13, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (14, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (15, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (16, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (17, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (18, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (19, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (20, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (21, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (22, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (23, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (24, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (25, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (26, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (27, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (28, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (29, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (30, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (31, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (32, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (33, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (34, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (35, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (36, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (37, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (38, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (39, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (40, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (41, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (42, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (43, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (44, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (45, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (46, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (47, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (48, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (49, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (50, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (51, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (52, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (53, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (54, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (55, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (56, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (57, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (58, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (59, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (60, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (61, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (62, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (63, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (64, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (65, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (66, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (67, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (68, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (69, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (70, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (71, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (72, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (73, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (74, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (75, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (76, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (77, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (78, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (79, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (80, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (81, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (82, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (83, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (84, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (85, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (86, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (87, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (88, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (89, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (90, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (91, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (92, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (93, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (94, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (95, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (96, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (97, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (98, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (99, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (100, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (101, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (102, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (103, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (104, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (105, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (106, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (107, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (108, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (109, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (110, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (111, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (112, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (113, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (114, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (115, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (116, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (117, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (118, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (119, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (120, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (121, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (122, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (123, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (124, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (125, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (126, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (127, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (128, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (129, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (130, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (131, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (132, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (133, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (134, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (135, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (136, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (137, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (138, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (139, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (140, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (141, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (142, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (143, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (144, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (145, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (146, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (147, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (148, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (149, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj) VALUES (150, 2, CAST('2026-04-01 08:00:00' AS DATETIME2), CAST('2026-04-01 12:00:00' AS DATETIME2), 100.0, 100.0);
+GO
 
-    SET @i = @i + 1;
-END
+-- 20. Operasyon Tablosu
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 01', CAST('2025-01-01' AS DATE), CAST('2025-01-03' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 1');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 02', CAST('2025-02-02' AS DATE), CAST('2025-02-04' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 2');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 03', CAST('2025-03-03' AS DATE), CAST('2025-03-05' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 3');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 04', CAST('2025-04-04' AS DATE), CAST('2025-04-06' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 4');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 05', CAST('2025-05-05' AS DATE), CAST('2025-05-07' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 5');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 06', CAST('2025-06-06' AS DATE), CAST('2025-06-08' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 6');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 07', CAST('2025-07-07' AS DATE), CAST('2025-07-09' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 7');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 08', CAST('2025-08-08' AS DATE), CAST('2025-08-10' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 8');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 09', CAST('2025-09-09' AS DATE), CAST('2025-09-11' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 9');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 10', CAST('2025-10-10' AS DATE), CAST('2025-10-12' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 10');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 11', CAST('2025-11-11' AS DATE), CAST('2025-11-13' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 11');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 12', CAST('2025-12-12' AS DATE), CAST('2025-12-14' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 12');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 13', CAST('2025-01-13' AS DATE), CAST('2025-01-15' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 13');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 14', CAST('2025-02-14' AS DATE), CAST('2025-02-16' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 14');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 15', CAST('2025-03-15' AS DATE), CAST('2025-03-17' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 15');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 16', CAST('2025-04-16' AS DATE), CAST('2025-04-18' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 16');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 17', CAST('2025-05-17' AS DATE), CAST('2025-05-19' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 17');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 18', CAST('2025-06-18' AS DATE), CAST('2025-06-20' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 18');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 19', CAST('2025-07-19' AS DATE), CAST('2025-07-21' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 19');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 20', CAST('2025-08-20' AS DATE), CAST('2025-08-22' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 20');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 21', CAST('2025-09-21' AS DATE), CAST('2025-09-23' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 21');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 22', CAST('2025-10-22' AS DATE), CAST('2025-10-24' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 22');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 23', CAST('2025-11-23' AS DATE), CAST('2025-11-25' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 23');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 24', CAST('2025-12-24' AS DATE), CAST('2025-12-26' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 24');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 25', CAST('2025-01-25' AS DATE), CAST('2025-01-27' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 25');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 26', CAST('2025-02-26' AS DATE), CAST('2025-02-28' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 26');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 27', CAST('2025-03-27' AS DATE), CAST('2025-03-28' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 27');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 28', CAST('2025-04-28' AS DATE), CAST('2025-04-28' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 28');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 29', CAST('2025-05-01' AS DATE), CAST('2025-05-03' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 29');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 30', CAST('2025-06-02' AS DATE), CAST('2025-06-04' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 30');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 31', CAST('2025-07-03' AS DATE), CAST('2025-07-05' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 31');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 32', CAST('2025-08-04' AS DATE), CAST('2025-08-06' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 32');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 33', CAST('2025-09-05' AS DATE), CAST('2025-09-07' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 33');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 34', CAST('2025-10-06' AS DATE), CAST('2025-10-08' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 34');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 35', CAST('2025-11-07' AS DATE), CAST('2025-11-09' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 35');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 36', CAST('2025-12-08' AS DATE), CAST('2025-12-10' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 36');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 37', CAST('2025-01-09' AS DATE), CAST('2025-01-11' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 37');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 38', CAST('2025-02-10' AS DATE), CAST('2025-02-12' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 38');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 39', CAST('2025-03-11' AS DATE), CAST('2025-03-13' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 39');
+INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama) VALUES (N'Geçen Yıl Kritik Operasyon 40', CAST('2025-04-12' AS DATE), CAST('2025-04-14' AS DATE), N'Gerçekçi geçen yıl operasyon kaydı 40');
+GO
 
-SET @i = 1;
-WHILE @i <= 180
-BEGIN
-    DECLARE @techizat_tur_no INT = (SELECT techizat_tur_no FROM (SELECT techizat_tur_no, ROW_NUMBER() OVER (ORDER BY techizat_tur_no) rn FROM TechizatTuru) X WHERE rn = ((@i - 1) % @techizat_tur_sayisi) + 1);
+-- 21. OpKatilir Tablosu
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 01' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 02' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 03' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 04' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 05' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 06' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 07' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 08' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 09' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 10' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 11' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 12' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 13' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 14' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 15' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 16' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 17' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 18' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 19' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 20' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 21' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 22' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 23' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 24' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 25' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 26' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 27' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 28' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 29' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 30' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 31' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 32' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 33' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 34' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 35' AND A.tc_kimlik_no = N'22334455668';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 01' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 02' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 03' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 04' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 05' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 06' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 07' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 08' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 09' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 10' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 11' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 12' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 13' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 14' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 15' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 16' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 17' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 18' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 19' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 20' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 21' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 22' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 23' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 24' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 25' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 26' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 27' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 28' AND A.tc_kimlik_no = N'11223344556';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 01' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 02' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 03' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 04' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 05' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 06' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 07' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 08' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 09' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 10' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 11' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 12' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 13' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 14' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 15' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 16' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 17' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 18' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 19' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 20' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 21' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 22' AND A.tc_kimlik_no = N'55667788994';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 01' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 02' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 03' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 04' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 05' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 06' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 07' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 08' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 09' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 10' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 11' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 12' AND A.tc_kimlik_no = N'33445566770';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 01' AND A.tc_kimlik_no = N'44556677882';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 02' AND A.tc_kimlik_no = N'44556677882';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 03' AND A.tc_kimlik_no = N'44556677882';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 04' AND A.tc_kimlik_no = N'44556677882';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 05' AND A.tc_kimlik_no = N'44556677882';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 06' AND A.tc_kimlik_no = N'44556677882';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 07' AND A.tc_kimlik_no = N'44556677882';
+INSERT INTO OpKatilir (operasyon_no, asker_no) SELECT operasyon_no, A.asker_no FROM Operasyon, Asker A WHERE operasyon_adi = N'Geçen Yıl Kritik Operasyon 08' AND A.tc_kimlik_no = N'44556677882';
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 1);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 2);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 3);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 4);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 5);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 6);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 7);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 8);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 9);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 10);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 11);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 12);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 13);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 14);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 15);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 16);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 17);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 18);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 19);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 21);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 22);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 23);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 24);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 25);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 26);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 27);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 28);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 29);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 30);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 31);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 32);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 33);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 34);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 35);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 36);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 37);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 38);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 39);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 41);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 42);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 43);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 44);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 45);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 46);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 47);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 48);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 49);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 50);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 51);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 52);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 53);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 54);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 55);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 56);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 57);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 58);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 59);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 61);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 62);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 63);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 64);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 65);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 66);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 67);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 68);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 69);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 70);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 71);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 72);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 73);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 74);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 75);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 76);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 77);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 78);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 79);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 81);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 82);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 83);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 84);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 85);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 86);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 87);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 88);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 89);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 90);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 91);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 92);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 93);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 94);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 95);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 96);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 97);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 98);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 99);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 101);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 102);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 103);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 104);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 105);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 106);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 107);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 108);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 109);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 110);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 111);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 112);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 113);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 114);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 115);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 116);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 117);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 118);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 119);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 120);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 121);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 122);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 123);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 124);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 125);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 126);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 127);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 128);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 129);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 130);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 131);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 132);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 133);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 134);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 135);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 136);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 137);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 138);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 139);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 140);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 141);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 142);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 143);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 144);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 145);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 146);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 147);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 148);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 149);
+INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (1, 150);
+GO
 
-    IF NOT EXISTS (SELECT 1 FROM Techizat WHERE seri_numarasi = CONCAT(N'TCH-', RIGHT(CONCAT('0000', @i), 4)))
-        INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no)
-        VALUES (CONCAT(N'TCH-', RIGHT(CONCAT('0000', @i), 4)), CONCAT(N'Teçhizat ', @i), CONCAT(N'Gerçekçi mock teçhizat kaydı ', @i), CASE WHEN @i % 17 = 0 THEN N'PASIF' ELSE N'AKTIF' END, @techizat_tur_no);
+-- 22. BirimOpKatilir & OpKullanilir
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (1, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (1, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (2, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (2, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (3, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (3, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (4, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (4, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (5, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (5, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (6, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (6, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (7, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (7, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (8, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (8, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (9, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (9, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (10, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (10, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (11, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (11, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (12, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (12, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (13, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (13, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (14, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (14, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (15, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (15, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (16, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (16, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (17, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (17, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (18, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (18, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (19, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (19, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (20, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (20, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (21, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (21, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (22, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (22, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (23, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (23, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (24, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (24, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (25, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (25, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (26, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (26, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (27, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (27, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (28, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (28, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (29, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (29, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (30, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (30, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (31, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (31, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (32, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (32, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (33, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (33, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (34, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (34, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (35, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (35, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (36, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (36, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (37, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (37, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (38, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (38, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (39, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (39, 1);
+INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (40, 4);
+INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (40, 1);
+GO
 
-    DECLARE @techizat_no INT = (SELECT techizat_no FROM Techizat WHERE seri_numarasi = CONCAT(N'TCH-', RIGHT(CONCAT('0000', @i), 4)));
-    DECLARE @birim_no INT = (SELECT birim_no FROM (SELECT birim_no, ROW_NUMBER() OVER (ORDER BY birim_no) rn FROM Birim) X WHERE rn = ((@i - 1) % @birim_sayisi) + 1);
-
-    IF NOT EXISTS (SELECT 1 FROM TransferOlur WHERE techizat_no = @techizat_no AND birim_no = @birim_no AND bitis_tarihi IS NULL)
-        INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi)
-        VALUES (@techizat_no, @birim_no, DATEADD(DAY, -300 - @i, CAST(GETDATE() AS DATE)), NULL);
-
-    SET @i = @i + 1;
-END
-
-SET @i = 1;
-WHILE @i <= 70
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Operasyon WHERE operasyon_adi = CONCAT(N'Operasyon ', RIGHT(CONCAT('00', @i), 2)))
-        INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama)
-        VALUES (CONCAT(N'Operasyon ', RIGHT(CONCAT('00', @i), 2)), DATEADD(DAY, -(@i * 11), CAST(GETDATE() AS DATE)), DATEADD(DAY, -(@i * 11) + 3, CAST(GETDATE() AS DATE)), CONCAT(N'Büyük veri mock operasyonu ', @i));
-
-    DECLARE @operasyon_no INT = (SELECT operasyon_no FROM Operasyon WHERE operasyon_adi = CONCAT(N'Operasyon ', RIGHT(CONCAT('00', @i), 2)));
-    DECLARE @op_birim_no INT = (SELECT birim_no FROM (SELECT birim_no, ROW_NUMBER() OVER (ORDER BY birim_no) rn FROM Birim) X WHERE rn = ((@i - 1) % @birim_sayisi) + 1);
-    DECLARE @op_techizat_no INT = (SELECT techizat_no FROM (SELECT techizat_no, ROW_NUMBER() OVER (ORDER BY techizat_no) rn FROM Techizat) X WHERE rn = ((@i - 1) % 180) + 1);
-
-    IF NOT EXISTS (SELECT 1 FROM BirimOpKatilir WHERE operasyon_no = @operasyon_no AND birim_no = @op_birim_no)
-        INSERT INTO BirimOpKatilir (operasyon_no, birim_no) VALUES (@operasyon_no, @op_birim_no);
-
-    IF NOT EXISTS (SELECT 1 FROM OpKullanilir WHERE operasyon_no = @operasyon_no AND techizat_no = @op_techizat_no)
-        INSERT INTO OpKullanilir (operasyon_no, techizat_no) VALUES (@operasyon_no, @op_techizat_no);
-
-    SET @i = @i + 1;
-END
-
-SET @i = 1;
-WHILE @i <= 60
-BEGIN
-    DECLARE @egitim_tur_no INT = (SELECT egitim_tur_no FROM (SELECT egitim_tur_no, ROW_NUMBER() OVER (ORDER BY egitim_tur_no) rn FROM EgitimTuru) X WHERE rn = ((@i - 1) % @egitim_tur_sayisi) + 1);
-    IF NOT EXISTS (SELECT 1 FROM Egitim WHERE baslangic_tarih_saat = DATEADD(DAY, -@i, @current_datetime))
-        INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat)
-        VALUES (@egitim_tur_no, DATEADD(DAY, -@i, @current_datetime), DATEADD(HOUR, 4, DATEADD(DAY, -@i, @current_datetime)));
-    SET @i = @i + 1;
-END
-
-DECLARE @top_birim_1 INT = (
-    SELECT birim_no
-    FROM (
-        SELECT NYS.birim_no, ROW_NUMBER() OVER (ORDER BY NYS.nobet_yeri_sayisi DESC, NYS.birim_no ASC) rn
-        FROM (
-            SELECT birim_no, COUNT(*) AS nobet_yeri_sayisi
-            FROM NobetYeri
-            GROUP BY birim_no
-        ) NYS
-    ) X
-    WHERE rn = 1
-);
-DECLARE @top_birim_2 INT = (
-    SELECT birim_no
-    FROM (
-        SELECT NYS.birim_no, ROW_NUMBER() OVER (ORDER BY NYS.nobet_yeri_sayisi DESC, NYS.birim_no ASC) rn
-        FROM (
-            SELECT birim_no, COUNT(*) AS nobet_yeri_sayisi
-            FROM NobetYeri
-            GROUP BY birim_no
-        ) NYS
-    ) X
-    WHERE rn = 2
-);
-DECLARE @top_birim_3 INT = (
-    SELECT birim_no
-    FROM (
-        SELECT NYS.birim_no, ROW_NUMBER() OVER (ORDER BY NYS.nobet_yeri_sayisi DESC, NYS.birim_no ASC) rn
-        FROM (
-            SELECT birim_no, COUNT(*) AS nobet_yeri_sayisi
-            FROM NobetYeri
-            GROUP BY birim_no
-        ) NYS
-    ) X
-    WHERE rn = 3
-);
-DECLARE @nobet_yeri_sayisi INT = (SELECT COUNT(*) FROM NobetYeri);
-DECLARE @operasyon_sayisi INT = (SELECT COUNT(*) FROM Operasyon);
-DECLARE @egitim_sayisi INT = (SELECT COUNT(*) FROM Egitim);
-
-SET @i = 1;
-WHILE @i <= 200
-BEGIN
-    DECLARE @asker_no INT = (SELECT asker_no FROM Asker WHERE tc_kimlik_no = RIGHT(CONCAT('00000000000', 11000000000 + @i), 11));
-    DECLARE @ana_birim_no INT = (SELECT birim_no FROM (SELECT birim_no, ROW_NUMBER() OVER (ORDER BY birim_no) rn FROM Birim) X WHERE rn = ((@i - 1) % @birim_sayisi) + 1);
-
-    IF NOT EXISTS (SELECT 1 FROM GorevYapar WHERE asker_no = @asker_no AND birim_no = @ana_birim_no)
-        INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi)
-        VALUES (@asker_no, @ana_birim_no, DATEADD(DAY, -260 - @i, CAST(GETDATE() AS DATE)), NULL);
-
-    IF @i <= 40
-    BEGIN
-        IF NOT EXISTS (SELECT 1 FROM GorevYapar WHERE asker_no = @asker_no AND birim_no = @top_birim_1)
-            INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) VALUES (@asker_no, @top_birim_1, DATEADD(DAY, -520 - @i, CAST(GETDATE() AS DATE)), DATEADD(DAY, -480 - @i, CAST(GETDATE() AS DATE)));
-        IF NOT EXISTS (SELECT 1 FROM GorevYapar WHERE asker_no = @asker_no AND birim_no = @top_birim_2)
-            INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) VALUES (@asker_no, @top_birim_2, DATEADD(DAY, -470 - @i, CAST(GETDATE() AS DATE)), DATEADD(DAY, -430 - @i, CAST(GETDATE() AS DATE)));
-        IF NOT EXISTS (SELECT 1 FROM GorevYapar WHERE asker_no = @asker_no AND birim_no = @top_birim_3)
-            INSERT INTO GorevYapar (asker_no, birim_no, baslama_tarihi, ayrilma_tarihi) VALUES (@asker_no, @top_birim_3, DATEADD(DAY, -420 - @i, CAST(GETDATE() AS DATE)), DATEADD(DAY, -380 - @i, CAST(GETDATE() AS DATE)));
-    END
-
-    DECLARE @nobet_yeri_no INT = (SELECT nobet_yeri_no FROM (SELECT nobet_yeri_no, ROW_NUMBER() OVER (ORDER BY nobet_yeri_no) rn FROM NobetYeri) X WHERE rn = ((@i - 1) % @nobet_yeri_sayisi) + 1);
-    IF NOT EXISTS (SELECT 1 FROM NobetTutar WHERE asker_no = @asker_no AND nobet_yeri_no = @nobet_yeri_no)
-        INSERT INTO NobetTutar (asker_no, nobet_yeri_no, baslangic_tarih_saat, bitis_tarih_saat, verilen_mermi_gramaj, getirilen_mermi_gramaj)
-        VALUES (@asker_no, @nobet_yeri_no, DATEADD(HOUR, -(@i * 3), @current_datetime), DATEADD(HOUR, -(@i * 3) + 4, @current_datetime), CASE WHEN @i % 2 = 0 THEN 250 ELSE NULL END, CASE WHEN @i % 2 = 0 THEN 250 - (@i % 4) ELSE NULL END);
-
-    IF @i % 4 = 0 AND NOT EXISTS (SELECT 1 FROM Izin WHERE asker_no = @asker_no)
-        INSERT INTO Izin (asker_no, izin_suresi_gun, yol_suresi_gun, baslangic_tarihi, gercek_ayrilis_tarih_saat, gercek_donus_tarih_saat)
-        VALUES (@asker_no, 5 + (@i % 5), @i % 3, DATEADD(DAY, -(@i % 120), CAST(GETDATE() AS DATE)), DATEADD(DAY, -(@i % 120), @current_datetime), DATEADD(DAY, -(@i % 120) + 7, @current_datetime));
-
-    IF @i % 8 = 0 AND NOT EXISTS (SELECT 1 FROM DisiplinCezasi WHERE asker_no = @asker_no)
-    BEGIN
-        DECLARE @ceza_sebep_no INT = (SELECT ceza_sebep_no FROM (SELECT ceza_sebep_no, ROW_NUMBER() OVER (ORDER BY ceza_sebep_no) rn FROM CezaSebebi) X WHERE rn = ((@i - 1) % @ceza_sebep_sayisi) + 1);
-        INSERT INTO DisiplinCezasi (asker_no, ceza_sebep_no, baslangic_tarihi, bitis_tarihi)
-        VALUES (@asker_no, @ceza_sebep_no, DATEADD(DAY, -(@i % 90), CAST(GETDATE() AS DATE)), DATEADD(DAY, -(@i % 90) + 2, CAST(GETDATE() AS DATE)));
-    END
-
-    DECLARE @katilim_operasyon_no INT = (SELECT operasyon_no FROM (SELECT operasyon_no, ROW_NUMBER() OVER (ORDER BY operasyon_no) rn FROM Operasyon) X WHERE rn = ((@i - 1) % @operasyon_sayisi) + 1);
-    IF NOT EXISTS (SELECT 1 FROM OpKatilir WHERE operasyon_no = @katilim_operasyon_no AND asker_no = @asker_no)
-        INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (@katilim_operasyon_no, @asker_no);
-
-    DECLARE @zimmet_techizat_no INT = (SELECT techizat_no FROM (SELECT techizat_no, ROW_NUMBER() OVER (ORDER BY techizat_no) rn FROM Techizat) X WHERE rn = ((@i - 1) % 180) + 1);
-    IF NOT EXISTS (SELECT 1 FROM Zimmetlenir WHERE techizat_no = @zimmet_techizat_no AND asker_no = @asker_no)
-        INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi)
-        VALUES (@zimmet_techizat_no, @asker_no, DATEADD(DAY, -(@i + 10), CAST(GETDATE() AS DATE)), CASE WHEN @i % 5 = 0 THEN DATEADD(DAY, -@i, CAST(GETDATE() AS DATE)) ELSE NULL END);
-
-    DECLARE @egitim_no INT = (SELECT egitim_no FROM (SELECT egitim_no, ROW_NUMBER() OVER (ORDER BY egitim_no) rn FROM Egitim) X WHERE rn = ((@i - 1) % @egitim_sayisi) + 1);
-    IF NOT EXISTS (SELECT 1 FROM EgitimAlir WHERE egitim_no = @egitim_no AND asker_no = @asker_no)
-        INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (@egitim_no, @asker_no);
-
-    IF @i % 3 <> 0 AND NOT EXISTS (SELECT 1 FROM Atis WHERE asker_no = @asker_no)
-    BEGIN
-        DECLARE @atis_tur_no INT = (SELECT atis_tur_no FROM (SELECT atis_tur_no, ROW_NUMBER() OVER (ORDER BY atis_tur_no) rn FROM AtisTuru) X WHERE rn = ((@i - 1) % @atis_tur_sayisi) + 1);
-        DECLARE @atis_lokasyon_no INT = (SELECT atis_lokasyon_no FROM (SELECT atis_lokasyon_no, ROW_NUMBER() OVER (ORDER BY atis_lokasyon_no) rn FROM AtisLokasyonu) X WHERE rn = ((@i - 1) % @atis_lokasyon_sayisi) + 1);
-        INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi)
-        VALUES (@asker_no, @atis_tur_no, @atis_lokasyon_no, DATEADD(DAY, -(@i % 180), CAST(GETDATE() AS DATE)));
-    END
-
-    IF @i % 20 = 0
-    BEGIN
-        IF NOT EXISTS (SELECT 1 FROM Ictima WHERE ictima_tarih_saat = DATEADD(DAY, -@i, @current_datetime))
-            INSERT INTO Ictima (birim_no, ictima_tarih_saat, olmasi_gereken_asker_sayisi, olan_asker_sayisi, onaylayan_asker_no)
-            VALUES (@ana_birim_no, DATEADD(DAY, -@i, @current_datetime), 60, 58, @asker_no);
-
-        DECLARE @ictima_no INT = (SELECT ictima_no FROM Ictima WHERE ictima_tarih_saat = DATEADD(DAY, -@i, @current_datetime));
-        IF NOT EXISTS (SELECT 1 FROM YoklamadaBulunur WHERE ictima_no = @ictima_no AND asker_no = @asker_no)
-            INSERT INTO YoklamadaBulunur (ictima_no, asker_no) VALUES (@ictima_no, @asker_no);
-    END
-
-    SET @i = @i + 1;
-END
-
-SET @i = 1;
-WHILE @i <= 25
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Operasyon WHERE operasyon_adi = CONCAT(N'Geçen Yıl Kritik Operasyon ', RIGHT(CONCAT('00', @i), 2)))
-        INSERT INTO Operasyon (operasyon_adi, baslangic_tarihi, bitis_tarihi, aciklama)
-        VALUES (CONCAT(N'Geçen Yıl Kritik Operasyon ', RIGHT(CONCAT('00', @i), 2)), DATEFROMPARTS(YEAR(GETDATE()) - 1, ((@i - 1) % 12) + 1, ((@i - 1) % 20) + 1), DATEADD(DAY, 2, DATEFROMPARTS(YEAR(GETDATE()) - 1, ((@i - 1) % 12) + 1, ((@i - 1) % 20) + 1)), N'Sorgu 1 için geçen yıl operasyonu');
-
-    DECLARE @gecen_yil_operasyon_no INT = (SELECT operasyon_no FROM Operasyon WHERE operasyon_adi = CONCAT(N'Geçen Yıl Kritik Operasyon ', RIGHT(CONCAT('00', @i), 2)));
-    DECLARE @test_asker_sira INT = 1;
-    WHILE @test_asker_sira <= 6
-    BEGIN
-        DECLARE @test_asker_no INT = (SELECT asker_no FROM Asker WHERE tc_kimlik_no = RIGHT(CONCAT('00000000000', 11000000000 + @test_asker_sira), 11));
-        IF NOT EXISTS (SELECT 1 FROM OpKatilir WHERE operasyon_no = @gecen_yil_operasyon_no AND asker_no = @test_asker_no)
-            INSERT INTO OpKatilir (operasyon_no, asker_no) VALUES (@gecen_yil_operasyon_no, @test_asker_no);
-        SET @test_asker_sira = @test_asker_sira + 1;
-    END
-    SET @i = @i + 1;
-END
-
-DECLARE @yalova_birim_no INT = (
-    SELECT TOP 1 B.birim_no
-    FROM Birim B
-    INNER JOIN Ilce ILCE ON ILCE.ilce_no = B.ilce_no
-    INNER JOIN Il I ON I.il_no = ILCE.il_no
-    WHERE I.il_adi = N'Yalova'
-    ORDER BY B.birim_no
-);
-DECLARE @patlayici_tur_no INT = (SELECT techizat_tur_no FROM TechizatTuru WHERE tur_adi = N'Patlayıcı');
-
-SET @i = 1;
-WHILE @i <= 15
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Techizat WHERE seri_numarasi = CONCAT(N'PAT-YLV-', RIGHT(CONCAT('000', @i), 3)))
-        INSERT INTO Techizat (seri_numarasi, ad, aciklama, durum, techizat_tur_no)
-        VALUES (CONCAT(N'PAT-YLV-', RIGHT(CONCAT('000', @i), 3)), CONCAT(N'Yalova Patlayıcı Teçhizat ', @i), N'Sorgu 2 için Yalova birliğinde bulunan patlayıcı teçhizat', N'AKTIF', @patlayici_tur_no);
-
-    DECLARE @patlayici_techizat_no INT = (SELECT techizat_no FROM Techizat WHERE seri_numarasi = CONCAT(N'PAT-YLV-', RIGHT(CONCAT('000', @i), 3)));
-    IF NOT EXISTS (SELECT 1 FROM TransferOlur WHERE techizat_no = @patlayici_techizat_no AND birim_no = @yalova_birim_no AND bitis_tarihi IS NULL)
-        INSERT INTO TransferOlur (techizat_no, birim_no, baslama_tarihi, bitis_tarihi)
-        VALUES (@patlayici_techizat_no, @yalova_birim_no, DATEADD(DAY, -200 - @i, CAST(GETDATE() AS DATE)), NULL);
-
-    DECLARE @zimmet_asker_1 INT = (SELECT asker_no FROM Asker WHERE tc_kimlik_no = RIGHT(CONCAT('00000000000', 11000000000 + @i), 11));
-    DECLARE @zimmet_asker_2 INT = (SELECT asker_no FROM Asker WHERE tc_kimlik_no = RIGHT(CONCAT('00000000000', 11000000000 + @i + 20), 11));
-
-    IF NOT EXISTS (SELECT 1 FROM Zimmetlenir WHERE techizat_no = @patlayici_techizat_no AND asker_no = @zimmet_asker_1)
-        INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi)
-        VALUES (@patlayici_techizat_no, @zimmet_asker_1, DATEADD(DAY, -120 - @i, CAST(GETDATE() AS DATE)), DATEADD(DAY, -90 - @i, CAST(GETDATE() AS DATE)));
-    IF NOT EXISTS (SELECT 1 FROM Zimmetlenir WHERE techizat_no = @patlayici_techizat_no AND asker_no = @zimmet_asker_2)
-        INSERT INTO Zimmetlenir (techizat_no, asker_no, baslama_tarihi, bitis_tarihi)
-        VALUES (@patlayici_techizat_no, @zimmet_asker_2, DATEADD(DAY, -80 - @i, CAST(GETDATE() AS DATE)), NULL);
-
-    SET @i = @i + 1;
-END
-
-DROP TABLE #Karakter;
-
-SELECT
-    (SELECT COUNT(*) FROM Asker) AS asker_sayisi,
-    (SELECT COUNT(*) FROM Techizat) AS techizat_sayisi,
-    (SELECT COUNT(*) FROM Operasyon) AS operasyon_sayisi,
-    (SELECT COUNT(*) FROM Techizat WHERE seri_numarasi LIKE N'PAT-YLV-%') AS sorgu2_patlayici_techizat_sayisi;
+-- 23. Egitim, EgitimAlir, Atis
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-01 09:00:00' AS DATETIME2), CAST('2026-05-01 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (1, 1);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (1, 1, 1, CAST('2026-05-01' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-02 09:00:00' AS DATETIME2), CAST('2026-05-02 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (2, 2);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (2, 1, 1, CAST('2026-05-02' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-03 09:00:00' AS DATETIME2), CAST('2026-05-03 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (3, 3);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (3, 1, 1, CAST('2026-05-03' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-04 09:00:00' AS DATETIME2), CAST('2026-05-04 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (4, 4);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (4, 1, 1, CAST('2026-05-04' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-05 09:00:00' AS DATETIME2), CAST('2026-05-05 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (5, 5);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (5, 1, 1, CAST('2026-05-05' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-06 09:00:00' AS DATETIME2), CAST('2026-05-06 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (6, 6);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (6, 1, 1, CAST('2026-05-06' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-07 09:00:00' AS DATETIME2), CAST('2026-05-07 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (7, 7);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (7, 1, 1, CAST('2026-05-07' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-08 09:00:00' AS DATETIME2), CAST('2026-05-08 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (8, 8);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (8, 1, 1, CAST('2026-05-08' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-09 09:00:00' AS DATETIME2), CAST('2026-05-09 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (9, 9);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (9, 1, 1, CAST('2026-05-09' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-10 09:00:00' AS DATETIME2), CAST('2026-05-10 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (10, 10);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (10, 1, 1, CAST('2026-05-10' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-11 09:00:00' AS DATETIME2), CAST('2026-05-11 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (11, 11);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (11, 1, 1, CAST('2026-05-11' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-12 09:00:00' AS DATETIME2), CAST('2026-05-12 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (12, 12);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (12, 1, 1, CAST('2026-05-12' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-13 09:00:00' AS DATETIME2), CAST('2026-05-13 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (13, 13);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (13, 1, 1, CAST('2026-05-13' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-14 09:00:00' AS DATETIME2), CAST('2026-05-14 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (14, 14);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (14, 1, 1, CAST('2026-05-14' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-15 09:00:00' AS DATETIME2), CAST('2026-05-15 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (15, 15);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (15, 1, 1, CAST('2026-05-15' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-16 09:00:00' AS DATETIME2), CAST('2026-05-16 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (16, 16);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (16, 1, 1, CAST('2026-05-16' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-17 09:00:00' AS DATETIME2), CAST('2026-05-17 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (17, 17);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (17, 1, 1, CAST('2026-05-17' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-18 09:00:00' AS DATETIME2), CAST('2026-05-18 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (18, 18);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (18, 1, 1, CAST('2026-05-18' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-19 09:00:00' AS DATETIME2), CAST('2026-05-19 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (19, 19);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (19, 1, 1, CAST('2026-05-19' AS DATE));
+INSERT INTO Egitim (egitim_tur_no, baslangic_tarih_saat, bitis_tarih_saat) VALUES (1, CAST('2026-05-20 09:00:00' AS DATETIME2), CAST('2026-05-20 17:00:00' AS DATETIME2));
+INSERT INTO EgitimAlir (egitim_no, asker_no) VALUES (20, 20);
+INSERT INTO Atis (asker_no, atis_tur_no, atis_lokasyon_no, atis_tarihi) VALUES (20, 1, 1, CAST('2026-05-20' AS DATE));
 GO
